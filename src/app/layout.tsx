@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import '@/styles/globals.css';
 import type { ReactNode } from 'react';
+import { SessionProvider } from '@/components/providers/session-provider'
 
 export const metadata: Metadata = {
   title: 'ACX Flow',
@@ -17,7 +18,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body className="bg-background text-foreground antialiased">{children}</body>
+      <body className="bg-background text-foreground antialiased">
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }
