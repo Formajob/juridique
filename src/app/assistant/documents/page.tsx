@@ -1,31 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { DEMO_CASES } from '@/lib/demo-cases';
-
-const ETAPE_LABELS: Record<string, string> = {
-  constatation_recue: 'Constatation recue',
-  analyse_gravite: 'Analyse gravite',
-  sanction_faute_non_grave: 'Sanction faute non grave',
-  convocation_seance: 'Convocation seance',
-  seance_presente: 'Seance presente',
-  seance_absente: 'Seance absente',
-  depot_inspection_absence: 'Depot inspection absence',
-  investigations: 'Investigations',
-  decision_licenciement: 'Decision licenciement',
-  decision_mise_a_pied: 'Decision mise a pied',
-  decision_sanction: 'Decision sanction',
-  fin_procedure: 'Fin de procedure',
-  cloture: 'Cloture',
-};
+import { useSyncExternalStore } from 'react';
+import { getWorkflowState, subscribeWorkflow, noteDocument } from '@/lib/workflow-store';
+import { ETAPE_LABELS } from '@/lib/workflow-ui';
 
 export default function AssistantDocumentsPage() {
+  const snap = useSyncExternalStore(subscribeWorkflow, getWorkflowState, getWorkflowState);
   const [selected, setSelected] = useState<string | null>(null);
   const [action, setAction] = useState<string | null>(null);
 
   const handleEnregistrer = () => {
     if (!selected || !action) return;
-    alert(`Dossier ${selected} → ${action === 'remis' ? 'Remis' : 'Reçu'} (démo).`);
+    const label = action === 'remis' ? 'Document remis' : action === 'recu' ? 'Document reçu' : 'Document manquant';
+    noteDocument(selected, label);
+    alert(`Dossier ${selected} → ${label} noté dans la fiche.`);
   };
 
   return (
@@ -41,7 +30,7 @@ export default function AssistantDocumentsPage() {
         <div className="card">
           <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--encre)', marginBottom: 12 }}>Dossiers disponibles</h2>
           <ul className="list" style={{ paddingLeft: 0 }}>
-            {DEMO_CASES.map((c) => (
+            {snap.cases.map((c) => (
               <li key={c.reference}>
                 <button
                   onClick={() => setSelected(c.reference)}
@@ -49,7 +38,7 @@ export default function AssistantDocumentsPage() {
                   style={{ justifyContent: 'space-between', fontWeight: 600 }}
                 >
                   <span>{c.reference}</span>
-                  <span style={{ fontSize: 12, color: 'var(--texte-secondaire)' }}>{ETAPE_LABELS[c.etape]}</span>
+                  <span style={{ fontSize: 12, color: 'var(--texte-secondaire)' }}>{ETAPE_LABELS[c.etape] || c.etape}</span>
                 </button>
               </li>
             ))}
@@ -79,6 +68,18 @@ export default function AssistantDocumentsPage() {
             </div>
           </div>
         )}
+
+        <div className="card">
+          <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--encre)', marginBottom: 12 }}>Reçu des autres onglets</h2>
+          <ul className="list" style={{ paddingLeft: 0 }}>
+            {snap.events.slice(0, 10).map((e) => (
+              <li key={e.id} style={{ padding: '6px 0', fontSize: 12, color: 'var(--texte-secondaire)' }}>
+                {e.dossier} — {e.action} — {new Date(e.date).toLocaleString('fr-FR')}
+              </li>
+            ))}
+            {snap.events.length === 0 && <li style={{ color: 'var(--texte-secondaire)' }}>Aucun.</li>}
+          </ul>
+        </div>
       </div>
     </div>
   );

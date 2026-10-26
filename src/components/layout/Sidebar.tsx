@@ -6,75 +6,78 @@ import { getMenu, type Role } from '@/lib/menu';
 
 interface SidebarProps {
   role: Role;
+  userName?: string;
 }
 
-export default function Sidebar({ role }: SidebarProps) {
+const USER_ROLES: Record<Role, string> = {
+  admin: 'Responsable département',
+  juriste: 'Juriste',
+  assistant: 'Assistant',
+};
+
+export default function Sidebar({ role, userName = role.charAt(0).toUpperCase() + role.slice(1) }: SidebarProps) {
   const pathname = usePathname();
   const menu = getMenu(role);
 
   return (
-    <aside className="layout-sidebar">
+    <aside className="sidebar flow-sidebar bg-sidebar flow-navy text-sidebar-foreground">
       <div className="sidebar-brand">
-        <div className="logo-box" style={{ width: 40, height: 16 }}>
-          <span className="logo-placeholder" style={{ fontSize: 9, letterSpacing: '0.04em' }}>ACX</span>
+        <div className="logo-box">
+          <span className="logo-placeholder">ACX Flow</span>
         </div>
-        <span className="sidebar-label" style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>
-          ACX Flow
-        </span>
+        <span className="sidebar-brand-label">ACX Flow</span>
       </div>
 
-      <nav className="sidebar-nav">
-        {menu.items.map((item) => (
-          <div key={item.id} className="sidebar-group">
-            <div className="sidebar-group-header">
-              <Link
-                href={item.href}
-                className="sidebar-item"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '8px 12px',
-                  background: 'none',
-                  border: 'none',
-                  textDecoration: 'none',
-                  color: 'var(--encre)',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontSize: 13,
-                }}
-              >
-                <span className="sidebar-item-text">{item.label}</span>
-                <span className="sidebar-item-dot" />
-              </Link>
-              {item.subitems && (
-                <div className="sidebar-submenu">
-                  {item.subitems.map((sub) => {
-                    const isActive = pathname === sub.href || pathname.startsWith(sub.href + '/');
-                    return (
-                      <Link
-                        key={sub.id}
-                        href={sub.href}
-                        className={`sidebar-subitem ${isActive ? 'active' : ''}`}
-                        style={{ display: 'block', padding: '6px 12px', fontSize: 12, color: isActive ? 'var(--cyan)' : 'var(--texte-secondaire)', textDecoration: 'none' }}
-                      >
-                        {sub.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
+      <nav className="sidebar-nav flow-nav">
+        {menu.items.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const hasSub = item.subitems && item.subitems.length > 0;
+
+          return (
+            <div key={item.id} className="sidebar-group flow-group">
+              <div className="sidebar-group-header flow-group-header">
+                <Link
+                  href={item.href}
+                  className={`sidebar-item flow-item ${isActive ? 'active' : ''} flow-hover`}
+                  onClick={(e) => { if (hasSub) e.preventDefault(); }}
+                >
+                  <span className="sidebar-item-text flow-item-text">{item.label}</span>
+                  {hasSub && <span className="sidebar-item-dot" />}
+                </Link>
+                {hasSub && (
+                  <div className="sidebar-submenu flow-submenu">
+                    {item.subitems?.map((sub) => {
+                      const subActive = pathname === sub.href || pathname.startsWith(sub.href + '/');
+                      return (
+                        <Link
+                          key={sub.id}
+                          href={sub.href}
+                          className={`sidebar-subitem flow-subitem ${subActive ? 'active' : ''} flow-subhover`}
+                        >
+                          {sub.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
-      <div className="sidebar-footer" style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid var(--filet)' }}>
-        <span className="sidebar-label" style={{ fontSize: 11, color: 'var(--texte-secondaire)' }}>
-          Démo
-        </span>
+      <div className="sidebar-user flow-user bg-card flow-card-text">
+        <div className="sidebar-user-info flow-user-info">
+          <div className="sidebar-user-avatar flow-avatar">
+            {userName.charAt(0).toUpperCase()}
+          </div>
+          <div className="sidebar-user-text flow-user-text">
+            <div className="sidebar-user-name flow-user-name">{userName}</div>
+            <div className="sidebar-user-role flow-user-role">{USER_ROLES[role]}</div>
+          </div>
+        </div>
+        <div className="sidebar-user-version flow-user-version">Démo v1.0</div>
       </div>
     </aside>
   );
 }
-

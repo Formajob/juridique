@@ -1,76 +1,87 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import Logo from '@/components/ui/Logo';
 
 export default function AccessPage() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--fond-page)' }}>
-      {/* En-tête */}
-      <header style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px',
-        borderBottom: '1px solid var(--filet)', background: 'var(--blanc)', position: 'sticky', top: 0, zIndex: 10,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Logo />
-          <span style={{ fontWeight: 700, color: 'var(--navy)', fontSize: 16 }}>ACX Flow</span>
+    <div className="min-h-screen flex overflow-hidden bg-background text-foreground">
+      <div className="w-1/2 bg-navy relative h-screen flex flex-col">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500 blur-2xl opacity-30 -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500 blur-2xl opacity-30 -translate-x-1/2 -translate-y-1/2 bottom-1/2 right-1/2" />
+        <div className="flex justify-center pt-12">
+          <Logo className="w-20 h-auto text-white opacity-90" />
         </div>
-        <div style={{ textAlign: 'right', fontSize: 12, color: 'var(--texte-secondaire)' }}>
-          <a href="https://acx.ma/" style={{ color: 'var(--cyan-fonce)', textDecoration: 'none' }} target="_blank" rel="noopener">
-            By ACX Maroc
-          </a>
+        <div className="flex flex-col items-center text-xs text-muted gap-2 pt-8">
+          <span className="uppercase tracking-wider">By ACX Maroc</span>
+          <div className="flex items-center justify-center gap-2 pt-4">
+            <span className="bg-cyan-500/20 text-cyan-500 border-cyan-500/50 px-3 py-1 text-xs font-medium">Espace Juridique</span>
+            <div className="w-2 h-1 bg-cyan-500 rounded-full opacity-50"></div>
+          </div>
         </div>
-      </header>
-
-      {/* Corps */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center', gap: 10 }}>
-        <div style={{ width: 80, height: 36, background: 'var(--blanc)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'var(--navy)', fontSize: 13, letterSpacing: '0.1em' }}>
-          ACX Flow
+        <h1 className="mt-6 text-3xl font-bold text-white text-center">Votre équipe.</h1>
+        <p className="mt-2 text-lg bg-gradient-to-r from-cyan-500 to-violet-500 bg-clip-text text-transparent">au même rythme.</p>
+        <p className="mt-6 text-sm text-muted-foreground text-center">Équipe juridique ACX Flow — Plateforme de gestion documentaire.</p>
+        <div className="mt-8 grid grid-cols-3 gap-4 justify-center">
+          <div className="bg-card text-white p-6 rounded-2xl border border-border hover:border-cyan-500">
+            <div className="text-cyan-600 text-3xl">📁</div>
+            <h3 className="mt-2 text-lg font-semibold uppercase tracking-wider">DOSSIERS</h3>
+            <p className="mt-1 text-sm text-muted-foreground line-clamp-1">Gestion et suivi des dossiers clients</p>
+          </div>
+          <div className="bg-card text-white p-6 rounded-2xl border border-border hover:border-cyan-500">
+            <div className="text-cyan-600 text-3xl">⏱️</div>
+            <h3 className="mt-2 text-lg font-semibold uppercase tracking-wider">PRÉSENCE</h3>
+            <p className="mt-1 text-sm text-muted-foreground line-clamp-1">Pointage et suivi du temps</p>
+          </div>
+          <div className="bg-card text-white p-6 rounded-2xl border border-border hover:border-cyan-500">
+            <div className="text-cyan-600 text-3xl">📊</div>
+            <h3 className="mt-2 text-lg font-semibold uppercase tracking-wider">SUIVI</h3>
+            <p className="mt-1 text-sm text-muted-foreground line-clamp-1">Statistiques et rapports</p>
+          </div>
         </div>
-
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--encre)' }}>
-          Accès démo
-        </h1>
-        <p style={{ color: 'var(--texte-secondaire)', maxWidth: 420, margin: '0 auto' }}>
-          Sélectionnez votre rôle pour accéder à la démo. Les données affichées sont fictives et étiquetées « Démo ».
-        </p>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24, width: '100%', maxWidth: 480 }}>
-          {[
-            { role: 'admin' as const, label: 'Admin', desc: 'Responsable du département. Il voit le flux des dossiers et la présence de l\'équipe.' },
-            { role: 'juriste' as const, label: 'Juriste', desc: 'Il traite les dossiers et pointe. Deux places : Juriste 1, Juriste 2.' },
-            { role: 'assistant' as const, label: 'Assistant', desc: 'Il réceptionne, note la remise et la réception des documents, et scanne le QR d\'un rendez-vous. Trois places : Assistant 1, Assistant 2, Assistant 3.' },
-          ].map((item) => (
-            <Link
-              key={item.role}
-              href={`/${item.role}`}
-              className="btn-primary"
-              style={{ textDecoration: 'none', width: '100%', justifyContent: 'space-between' }}
-            >
-              <span>{DemoLabel(item.role)}</span>
-              <span style={{ fontSize: 12, color: 'var(--blanc)', fontWeight: 600 }}>Démo</span>
-            </Link>
-          ))}
-        </div>
-
-        <p style={{ marginTop: 20, fontSize: 12, color: 'var(--texte-secondaire)' }}>
-          Pour le directeur et les tests. Aucun mot de passe.
-        </p>
+        <p className="mt-8 text-sm text-cyan-500 text-center">© 2026 ACX Maroc — Plateforme interne. Tous droits réservés.</p>
       </div>
-
-      {/* Pied de page */}
-      <footer style={{ padding: '16px 24px', fontSize: 12, color: 'var(--texte-secondaire)', borderTop: '1px solid var(--filet)', marginTop: 32 }}>
-        © {new Date().getFullYear()} ACX Maroc · <a href="https://acx.ma/" style={{ color: 'var(--cyan-fonce)' }} target="_blank" rel="noopener">acx.ma</a>
-      </footer>
+      <div className="w-1/2 bg-white min-w-0 flex flex-col overflow-hidden">
+        <div className="border-y border-border">
+          <div className="px-6 py-4 text-muted-foreground">
+            <h2 className="text-xl font-bold text-navy">Bienvenue</h2>
+            <p className="mb-4">Connectez-vous à la plateforme ACX Flow.</p>
+          </div>
+        </div>
+        <div className="px-6 py-8 flex-1">
+          <form className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">Email</label>
+              <input type="email" placeholder="votre@email.com" className="w-full px-4 py-3 rounded-lg bg-muted/50 border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all" autoComplete="email" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">Mot de passe</label>
+              <input type="password" placeholder="••••••••" className="w-full px-4 py-3 rounded-lg bg-muted/50 border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all" autoComplete="password" />
+            </div>
+            <div>
+              <button type="submit" className="w-full flex items-center justify-center py-3 rounded-full bg-navy text-white font-semibold text-sm hover:bg-navy/90 transition-all">
+                <span>Se connecter</span>
+              </button>
+            </div>
+          </form>
+        </div>
+        <div className="px-6 py-4 border-t border-border text-muted-foreground text-xs">
+          <span>Pas de compte ? Contactez l'administrateur</span>
+          <a href="/" className="text-purple-600 hover text-purple-700 transition-colors">Se connecter</a>
+        </div>
+        <div className="px-6 py-4 border-t border-border">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Accès démo</p>
+          <div className="space-y-1 text-muted-foreground">
+            <span className="text-cyan-600 font-medium">Admin</span> — Accès complet
+            <span className="text-cyan-600 font-medium">Juriste</span> — Notes & dossiers
+            <span className="text-cyan-600 font-medium">Assistant</span> — Suivi docs
+          </div>
+        </div>
+      </div>
     </div>
   );
-}
-
-function DemoLabel(role: string): string {
-  const labels: Record<string, string> = {
-    admin: 'Admin',
-    juriste: 'Juriste',
-    assistant: 'Assistant',
-  };
-  return labels[role] || role;
 }

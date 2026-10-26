@@ -12,18 +12,18 @@ const DEMO_CASES = [
 ];
 
 const ETAPE_LABELS: Record<string, string> = {
-  constatation_recue: 'Constatation recue',
-  analyse_gravite: 'Analyse gravite',
+  constatation_recue: 'Constatation reçue',
+  analyse_gravite: 'Analyse',
   sanction_faute_non_grave: 'Sanction faute non grave',
-  convocation_seance: 'Convocation seance',
-  seance_presente: 'Seance presente',
-  seance_absente: 'Seance absente',
-  depot_inspection_absence: 'Depot inspection absence',
+  convocation_seance: 'Convocations',
+  seance_presente: 'Séances',
+  seance_absente: 'Séances',
+  depot_inspection_absence: 'Dépôt inspection absence',
   investigations: 'Investigations',
-  decision_licenciement: 'Decision licenciement',
-  decision_mise_a_pied: 'Decision mise a pied',
-  decision_sanction: 'Decision sanction',
-  fin_procedure: 'Fin de procedure',
+  decision_licenciement: 'Décision licenciement',
+  decision_mise_a_pied: 'Décision mise à pied',
+  decision_sanction: 'Décision sanction',
+  fin_procedure: 'Fin de procédure',
   cloture: 'Cloture',
 };
 

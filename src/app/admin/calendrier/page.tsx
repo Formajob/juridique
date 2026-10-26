@@ -1,41 +1,26 @@
 'use client';
 
 import Link from 'next/link';
-import { DEMO_CASES, createDemoAppointments } from '@/lib/demo-cases';
-import { formatDateFr, formatDateTimeFr } from '@/lib/format';
-
-const ETAPE_LABELS: Record<string, string> = {
-  constatation_recue: 'Constatation recue',
-  analyse_gravite: 'Analyse gravite',
-  sanction_faute_non_grave: 'Sanction faute non grave',
-  convocation_seance: 'Convocation seance',
-  seance_presente: 'Seance presente',
-  seance_absente: 'Seance absente',
-  depot_inspection_absence: 'Depot inspection absence',
-  investigations: 'Investigations',
-  decision_licenciement: 'Decision licenciement',
-  decision_mise_a_pied: 'Decision mise a pied',
-  decision_sanction: 'Decision sanction',
-  fin_procedure: 'Fin de procedure',
-  cloture: 'Cloture',
-};
+import { useSyncExternalStore } from 'react';
+import { getWorkflowState, subscribeWorkflow } from '@/lib/workflow-store';
+import { formatDateTimeFr } from '@/lib/format';
 
 export default function AdminCalendarPage() {
-  const appointments = createDemoAppointments();
+  const snap = useSyncExternalStore(subscribeWorkflow, getWorkflowState, getWorkflowState);
 
   return (
     <div className="wrap-admin">
       <header className="header">
         <div>
           <h1 className="header-title">Calendrier</h1>
-          <p style={{ fontSize: 13, color: 'var(--texte-secondaire)' }}>Créneaux de convocation de démonstration.</p>
+          <p style={{ fontSize: 13, color: 'var(--texte-secondaire)' }}>Créneaux de convocation.</p>
         </div>
       </header>
 
       <div className="card" style={{ marginTop: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
-          {appointments.map((appt) => {
-            const dossier = DEMO_CASES.find(c => c.reference === appt.dossier);
+          {snap.appointments.map((appt) => {
+            const dossier = snap.cases.find((c) => c.reference === appt.dossier);
             return (
               <Link key={appt.id} href={`/admin/dossiers/${appt.dossier}`} className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -44,10 +29,11 @@ export default function AdminCalendarPage() {
                 </div>
                 <div style={{ fontWeight: 600, color: 'var(--encre)' }}>{appt.dossier}</div>
                 <div style={{ fontSize: 13, color: 'var(--texte-secondaire)' }}>{formatDateTimeFr(appt.debut)} · {appt.lieu}</div>
-                <div style={{ fontSize: 12, color: 'var(--texte-secondaire)' }}>{dossier?.statut || 'dossier'}</div>
+                <div style={{ fontSize: 12, color: 'var(--texte-secondaire)' }}>{dossier?.etape || 'dossier'}</div>
               </Link>
             );
           })}
+          {snap.appointments.length === 0 && <div style={{ color: 'var(--texte-secondaire)' }}>Aucune convocation.</div>}
         </div>
       </div>
     </div>

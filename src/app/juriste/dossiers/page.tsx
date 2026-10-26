@@ -1,91 +1,98 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
-import { DEMO_CASES, createDemoAppointments } from '@/lib/demo-cases';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+import { useSyncExternalStore } from 'react';
+import { getWorkflowState, subscribeWorkflow } from '@/lib/workflow-store';
+import { etapePageGroup, ETAPE_LABELS, pageTitleFor } from '@/lib/workflow-ui';
+import { formatDateFr } from '@/lib/format';
 
-const ETAPE_ORDER = [
-  'analyse_gravite',
-  'convocation_seance',
-  'seance_presente',
-  'seance_absente',
-  'depot_inspection_absence',
-  'investigations',
-  'decision_licenciement',
-  'decision_mise_a_pied',
-  'decision_sanction',
-  'cloture',
-] as const;
+function JuristeDossiersPageInner() {
+  const snap = useSyncExternalStore(subscribeWorkflow, getWorkflowState, getWorkflowState);
+  const params = useSearchParams();
+  const etapeQuery = params.get('etape');
 
-const ETAPE_LABEL: Record<string, string> = {
-  analyse_gravite: 'Analyse gravite',
-  convocation_seance: 'Convocation seance',
-  seance_presente: 'Seance presente',
-  seance_absente: 'Seance absente',
-  depot_inspection_absence: 'Depot inspection absence',
-  investigations: 'Investigations',
-  decision_licenciement: 'Decision licenciement',
-  decision_mise_a_pied: 'Decision mise a pied',
-  decision_sanction: 'Decision sanction',
-  cloture: 'Cloture',
-};
+  const isEcheances = etapeQuery === null;
 
-export default function JuristeDossiersPage() {
-  const cas = DEMO_CASES;
-
-  const groupe = new Map<string, typeof cas>();
-  for (const c of cas) {
-    if (!groupe.has(c.etape)) groupe.set(c.etape, []);
-    groupe.get(c.etape)!.push(c);
+  let title = isEcheances ? 'Échéances' : pageTitleFor(etapeQuery, 'juriste');
+  let items = snap.cases;
+  if (isEcheances) {
+    items = snap.cases.filter((c) => !!c.echeance).sort((a, b) => new Date(a.echeance!).getTime() - new Date(b.echeance!).getTime());
+  } else {
+    const group = etapePageGroup(etapeQuery!);
+    items = group.length ? snap.cases.filter((c) => group.includes(c.etape)) : snap.cases.filter((c) => c.etape === etapeQuery);
   }
-
-  const etapesOrdonnees = ETAPE_ORDER.filter(code => groupe.has(code));
 
   return (
     <div className="wrap-admin">
       <header className="header">
         <div>
-          <h1 className="header-title">Dossiers</h1>
-          <p style={{ fontSize: 13, color: 'var(--texte-secondaire)' }}>Dossiers de démonstration par étape.</p>
+          <h1 className="header-title">{title}</h1>
+          <p style={{ fontSize: 13, color: 'var(--texte-secondaire)' }}>
+            {items.length} dossier{items.length > 1 ? 's' : ''}.
+          </p>
         </div>
+        <Link href="/juriste/dossiers" className="btn-pill">Tous / Échéances</Link>
       </header>
 
-      <div style={{ display: 'grid', gap: 20 }}>
-        {etapesOrdonnees.map((etape) => {
-          const items = groupe.get(etape)!;
-          const etapeLabel = ETAPE_LABEL[etape] || etape;
-          const nextSteps = (ETAPE_ORDER as readonly string[]).filter(s => s > etape && groupe.has(s));
-          const hasNext = nextSteps.length > 0;
-          const nextLabel = hasNext ? nextSteps.join(', ') : 'Accès fermé';
+      <div className="card" style={{ marginTop: 16, overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--filet)' }}>
+              <th style={{ textAlign: 'left', padding: '8px' }}>Référence</th>
+              <th style={{ textAlign: 'left', padding: '8px' }}>Identifiant agent</th>
+              <th style={{ textAlign: 'left', padding: '8px' }}>Activité</th>
+              <th style={{ textAlign: 'left', padding: '8px' }}>Étape</th>
+              <th style={{ textAlign: 'left', padding: '8px' }}>Échéance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((c) => {
+              const overdue = c.echeance && new Date(c.echeance) < new Date();
+              return (
+                <tr key={c.reference} style={{ borderBottom: '1px solid var(--filet)' }}>
+                  <td style={{ padding: '8px' }}>
+                    <Link href={`/juriste/dossiers/${c.reference}`} style={{ fontWeight: 600, color: 'var(--encre)' }}>{c.reference}</Link>
+                  </td>
+                  <td style={{ padding: '8px' }}>{c.agentId}</td>
+                  <td style={{ padding: '8px' }}>{c.affectationFixe?.lob || ''} / {c.affectationFixe?.department || ''}</td>
+                  <td style={{ padding: '8px' }}>{ETAPE_LABELS[c.etape] || c.etape}</td>
+                  <td style={{ padding: '8px', color: overdue ? '#a00' : 'inherit', fontWeight: overdue ? 700 : 400 }}>
+                    {c.echeance ? formatDateFr(c.echeance) : '—'}
+                  </td>
+                </tr>
+              );
+            })}
+            {items.length === 0 && (
+              <tr>
+                <td colSpan={5} style={{ padding: '20px', textAlign: 'center', color: 'var(--texte-secondaire)' }}>Aucun dossier.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-          return (
-            <div key={etape} className="card" style={{ padding: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--encre)' }}>
-                  <span className={`badge badge-etape badge-${etape}`} style={{ marginRight: 8 }}>{etapeLabel}</span>
-                  <span style={{ fontSize: 12, color: 'var(--texte-secondaire)', fontWeight: 400 }}>({items.length})</span>
-                </h2>
-                <span className="badge badge-navy">{items.length} dossier{items.length > 1 ? 's' : ''}</span>
-              </div>
-              <ul className="list" style={{ paddingLeft: 0 }}>
-                {items.map((c) => (
-                  <li key={c.reference}>
-                    <Link
-                      href={`/juriste/dossiers/${c.reference}`}
-                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--filet)', textDecoration: 'none', color: 'var(--encre)' }}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 600 }}>{c.reference}</div>
-                        <div style={{ fontSize: 12, color: 'var(--texte-secondaire)' }}>{etapeLabel} · {c.statut}</div>
-                      </div>
-                      <span style={{ fontSize: 12, color: 'var(--texte-secondaire)' }}>→ {nextLabel}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
+      <div className="card" style={{ marginTop: 16 }}>
+        <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--encre)', marginBottom: 12 }}>Reçu des autres onglets</h2>
+        <ul className="list" style={{ paddingLeft: 0 }}>
+          {snap.events.slice(0, 10).map((e) => (
+            <li key={e.id} style={{ padding: '6px 0', fontSize: 12, color: 'var(--texte-secondaire)' }}>
+              {e.dossier} — {e.action} — {new Date(e.date).toLocaleString('fr-FR')}
+            </li>
+          ))}
+          {snap.events.length === 0 && <li style={{ color: 'var(--texte-secondaire)' }}>Aucun.</li>}
+        </ul>
       </div>
     </div>
   );
 }
+
+export default function JuristeDossiersPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 20 }}>Chargement…</div>}>
+      <JuristeDossiersPageInner />
+    </Suspense>
+  );
+}
+

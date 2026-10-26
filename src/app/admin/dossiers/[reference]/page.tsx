@@ -1,38 +1,37 @@
+'use client';
+
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { createDemoDashboardData } from '@/lib/demo-dashboard';
+import { useSyncExternalStore } from 'react';
+import { useParams } from 'next/navigation';
+import { getWorkflowState, subscribeWorkflow, transitionCase } from '@/lib/workflow-store';
 import { BRANCHES } from '@/lib/workflow-branch';
+import { ETAPE_LABELS } from '@/lib/workflow-ui';
 import { formatDateFr } from '@/lib/format';
 
-const ETAPE_LABELS: Record<string, string> = {
-  constatation_recue: 'Constatation recue',
-  analyse_gravite: 'Analyse gravite',
-  sanction_faute_non_grave: 'Sanction faute non grave',
-  convocation_seance: 'Convocation seance',
-  seance_presente: 'Seance presente',
-  seance_absente: 'Seance absente',
-  depot_inspection_absence: 'Depot inspection absence',
-  investigations: 'Investigations',
-  decision_licenciement: 'Decision licenciement',
-  decision_mise_a_pied: 'Decision mise a pied',
-  decision_sanction: 'Decision sanction',
-  fin_procedure: 'Fin de procedure',
-  cloture: 'Cloture',
-};
-
-interface PageProps {
-  params: { reference: string };
+function tabForStep(step: string): string {
+  if (step === 'constatation_recue') return 'Constatations';
+  if (step === 'analyse_gravite') return 'Analyse';
+  if (step === 'convocation_seance') return 'Convocations';
+  if (step === 'seance_presente' || step === 'seance_absente' || step === 'pv_seance') return 'Séances';
+  if (step === 'cloture') return 'Clos';
+  return 'Décisions';
 }
 
-export default function AdminDossierDetailPage({ params }: PageProps) {
-  const cas = createDemoDashboardData();
-  const dossier = cas.find((c) => c.reference === params.reference);
+export default function AdminDossierDetailPage() {
+  const params = useParams();
+  const reference = params?.reference as string;
+  const snap = useSyncExternalStore(subscribeWorkflow, getWorkflowState, getWorkflowState);
+  const dossier = snap.cases.find((c) => c.reference === reference);
 
   if (!dossier) {
     notFound();
   }
 
   const branch = BRANCHES.find((b) => b.from === dossier.etape);
+  const closed = dossier.etape === 'cloture';
+  const events = snap.events.filter((e) => e.dossier === dossier.reference).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const passedSteps = Array.from(new Set(events.map((e) => e.etape)));
 
   return (
     <div className="wrap-admin">
@@ -40,14 +39,13 @@ export default function AdminDossierDetailPage({ params }: PageProps) {
         <div>
           <h1 className="header-title">Dossier {dossier.reference}</h1>
           <p style={{ fontSize: 13, color: 'var(--texte-secondaire)' }}>
-            Étape actuelle : {ETAPE_LABELS[dossier.etape] || dossier.etape} · Statut : {dossier.statut}
+            Étape actuelle : {ETAPE_LABELS[dossier.etape] || dossier.etape} · Onglet : {tabForStep(dossier.etape)}
           </p>
         </div>
         <Link href="/admin/dossiers" className="btn-pill">Retour</Link>
       </header>
 
       <div style={{ display: 'grid', gap: 16 }}>
-        {/* Étape courante */}
         <div className="card">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -58,62 +56,70 @@ export default function AdminDossierDetailPage({ params }: PageProps) {
               )}
             </div>
             <p style={{ fontSize: 13, color: 'var(--texte-secondaire)' }}>
-              Référence : <span className="code">{dossier.reference}</span> · Réception : {dossier.reception ? 'Oui' : 'Non'} · Créé par : {dossier.creePar}
+              Référence : <span className="code">{dossier.reference}</span> · Identifiant agent : {dossier.agentId} · Activité : {dossier.affectationFixe?.lob} / {dossier.affectationFixe?.department}
             </p>
           </div>
         </div>
 
-        {/* Branche autorisée */}
         <div className="card">
-          <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--encre)', marginBottom: 12 }}>
-            Branche autorisée — étape courante :
-            <span style={{ marginLeft: 8, textTransform: 'capitalize' }}>{ETAPE_LABELS[dossier.etape] || dossier.etape}</span>
-          </h2>
-          {branch ? (
+          <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--encre)', marginBottom: 12 }}>Process de ce dossier</h2>
+          <ol style={{ paddingLeft: 20, display: 'grid', gap: 6, fontSize: 13 }}>
+            {passedSteps.map((s) => (
+              <li key={s} style={{ color: 'var(--texte-secondaire)' }}>
+                {ETAPE_LABELS[s] || s} — passé
+              </li>
+            ))}
+            <li style={{ fontWeight: 700, color: 'var(--encre)' }}>
+              {ETAPE_LABELS[dossier.etape] || dossier.etape} — étape actuelle ({tabForStep(dossier.etape)})
+            </li>
+            {!closed && branch && branch.steps.map((s) => (
+              <li key={s.code} style={{ color: 'var(--texte-secondaire)', fontStyle: 'italic' }}>
+                Suivant possible : {s.label}
+              </li>
+            ))}
+            {closed && <li style={{ color: 'var(--texte-secondaire)' }}>Dossier clos — aucune branche ouverte.</li>}
+          </ol>
+        </div>
+        <div className="card">
+          <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--encre)', marginBottom: 12 }}>Branche autorisée</h2>
+          {closed ? (
+            <div style={{ padding: '20px', color: 'var(--texte-secondaire)', textAlign: 'center' }}>Dossier clos — aucun bouton.</div>
+          ) : branch ? (
             <div style={{ display: 'grid', gap: 10 }}>
-              {branch.steps.map((s) => {
-                const allowed = branch.transitions.includes(s.code);
-                return (
-                  <Link
-                    key={s.code}
-                    href={`/admin/dossiers/${dossier.reference}`}
-                    className="btn-pill"
-                    style={{
-                      justifyContent: 'space-between',
-                      fontWeight: 600,
-                      opacity: allowed ? 1 : 0.5,
-                      cursor: allowed ? 'pointer' : 'not-allowed',
-                    }}
-                    onClick={(e) => { if (!allowed) e.preventDefault(); }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{s.label}</div>
-                      <div style={{ fontSize: 12, color: 'var(--texte-secondaire)' }}>{ETAPE_LABELS[s.code] || s.code}</div>
-                    </div>
-                    <span style={{ opacity: allowed ? 1 : 0.4 }}>→</span>
-                  </Link>
-                );
-              })}
+              {branch.steps.map((s) => (
+                <button
+                  key={s.code}
+                  className="btn-pill"
+                  style={{ justifyContent: 'space-between', fontWeight: 600 }}
+                  onClick={() => transitionCase(dossier.reference, s.code, s.label, 'Fiche')}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{s.label}</div>
+                    <div style={{ fontSize: 12, color: 'var(--texte-secondaire)' }}>{ETAPE_LABELS[s.code] || s.code}</div>
+                  </div>
+                  <span>→</span>
+                </button>
+              ))}
             </div>
           ) : (
             <div style={{ padding: '20px', color: 'var(--texte-secondaire)', textAlign: 'center' }}>
-              Cette étape n&rsquo;ouvre pas de branche vers une autre étape.
+              Cette étape n’ouvre pas de branche.
             </div>
           )}
         </div>
 
-        {/* Événements */}
         <div className="card">
-          <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--encre)', marginBottom: 12 }}>Événements ({dossier.reference})</h2>
+          <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--encre)', marginBottom: 12 }}>Trace des passages</h2>
           <div style={{ display: 'grid', gap: 10 }}>
-            {cas.map((c) => (
-              <div key={c.reference} className="card" style={{ padding: '12px 16px' }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--encre)' }}>{c.reference}</div>
+            {events.map((e) => (
+              <div key={e.id} className="card" style={{ padding: '12px 16px' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--encre)' }}>{e.action}</div>
                 <div style={{ fontSize: 12, color: 'var(--texte-secondaire)' }}>
-                  {ETAPE_LABELS[c.etape] || c.etape} · {c.statut}
+                  {ETAPE_LABELS[e.etape] || e.etape} · {new Date(e.date).toLocaleString('fr-FR')} · {e.auteur}
                 </div>
               </div>
             ))}
+            {events.length === 0 && <div style={{ color: 'var(--texte-secondaire)' }}>Aucun passage.</div>}
           </div>
         </div>
       </div>

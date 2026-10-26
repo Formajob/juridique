@@ -1,11 +1,16 @@
-// Logo ACX Flow : boîte 168x28, object-fit contain, fond clair.
-// Le fichier SVG du logo n'existant pas dans le dépôt, on affiche le texte
-// "ACX Flow" dans la boîte. Aucun symbole, aucun slogan.
+import Image from 'next/image';
 
+// Logo ACX Flow : utilise le fichier SVG officiel
 export default function Logo({ className = '' }: { className?: string }) {
   return (
-    <div className={`logo-box ${className}`}>
-      <span className="logo-placeholder">ACX Flow</span>
+    <div className={`flex items-center gap-2 ${className}`}>
+      <Image
+        src="/logo-acx-flow.svg"
+        alt="ACX Flow"
+        width={120}
+        height={36}
+        className="h-9 w-auto block"
+      />
     </div>
   );
 }
