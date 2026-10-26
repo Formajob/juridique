@@ -33,6 +33,7 @@ function JuristeDossiersPageInner() {
             {items.length} dossier{items.length > 1 ? 's' : ''}.
           </p>
         </div>
+        <Link href="/juriste/dossiers/nouveau" className="btn-pill">Nouveau dossier</Link>
         <Link href="/juriste/dossiers" className="btn-pill">Tous / Échéances</Link>
       </header>
 

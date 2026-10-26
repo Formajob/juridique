@@ -147,6 +147,53 @@ export function transitionCase(ref: string, toStep: string, action: string, orig
   setWorkflowState({ cases: newCases, events: [evt, ...s.events], appointments });
 }
 
+export function createCase(input: Partial<Case> & { reference?: string }): Case {
+  const s = getWorkflowState();
+  const trimmedRef = input.reference?.trim();
+  const nextNumber = s.cases.reduce((max, c) => {
+    const match = c.reference.match(/(\d+)\s*$/);
+    const n = match ? parseInt(match[1], 10) : 0;
+    return Math.max(max, n);
+  }, 0) + 1;
+  const reference = trimmedRef || `DEMO-2026-${String(nextNumber).padStart(4, '0')}`;
+  const etape = input.etape || 'constatation_recue';
+  const echeance =
+    input.echeance === undefined
+      ? (computeEcheance(etape) ?? null)
+      : input.echeance;
+  const newCase: Case = {
+    id: `case-${reference}-${Date.now()}`,
+    reference,
+    agentId: input.agentId ?? null,
+    affectationFixe: input.affectationFixe || { lob: 'VL', department: 'VL' },
+    etape,
+    statut: input.statut || (etape === 'cloture' ? 'Clos' : 'En cours'),
+    reception: input.reception ?? false,
+    creePar: input.creePar || 'Saisie',
+    juristeId: input.juristeId ?? null,
+    echeance,
+    tenantId: input.tenantId || 'juridique-xceed',
+    createdAt: new Date().toISOString(),
+  };
+
+  const evt: CaseEvent = {
+    id: `evt-${reference}-${Date.now()}`,
+    dossier: reference,
+    etape,
+    action: 'Dossier saisi',
+    auteur: newCase.creePar,
+    date: new Date().toISOString(),
+    tenantId: newCase.tenantId,
+  };
+
+  setWorkflowState({
+    cases: [newCase, ...s.cases],
+    events: [evt, ...s.events],
+    appointments: s.appointments,
+  });
+
+  return newCase;
+}
 export function noteDocument(ref: string, action: string) {
   const s = getWorkflowState();
   const c = s.cases.find((x) => x.reference === ref);

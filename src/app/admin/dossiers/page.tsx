@@ -33,6 +33,7 @@ function AdminDossiersPageInner() {
             {items.length} dossier{items.length > 1 ? 's' : ''}.
           </p>
         </div>
+        <Link href="/admin/dossiers/nouveau" className="btn-pill">Nouveau dossier</Link>
         <Link href="/admin/dossiers" className="btn-pill">Tous / Échéances</Link>
       </header>
 

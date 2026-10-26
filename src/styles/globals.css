@@ -523,9 +523,9 @@
   /* ============ Header class (legacy) ============ */
 
   .header {
-    background: var(--color-blanc);
-    border-bottom: 1px solid var(--color-filet);
-    padding: 14px 24px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #7c3aed 100%);
+    border-bottom: none;
+    padding: 18px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -533,6 +533,23 @@
     position: sticky;
     top: 0;
     z-index: 100;
+    border-radius: 0 0 18px 18px;
+    color: #fff;
+    box-shadow: 0 16px 40px rgba(37, 99, 235, .25);
+    margin-bottom: 20px;
+  }
+
+  .header-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -.5px;
+    margin: 0;
+  }
+
+  .header p {
+    color: rgba(255, 255, 255, .85);
+    font-size: 13px;
   }
 
   .header-brand {
@@ -553,9 +570,9 @@
 
   .card {
     background: var(--color-blanc);
-    border: 1px solid var(--color-filet);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
+    border: 1px solid rgba(148, 163, 184, .18);
+    border-radius: 18px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, .08);
     padding: 24px;
   }
 
@@ -638,7 +655,9 @@
 
   .wrap-admin {
     margin: 0 auto;
-    padding: 0 24px 64px;
+    padding: 24px 24px 64px;
+    background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+    min-height: 100vh;
   }
 
   .section-title {

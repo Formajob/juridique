@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react';
 import type { Role } from '@/lib/const';
 import Sidebar from './Sidebar';
 
@@ -17,9 +17,11 @@ interface RoleLayoutProps {
 
 export default function RoleLayout({ role, children }: RoleLayoutProps) {
   return (
-    <div className="layout bg-background text-foreground">
+    <div className="flex min-h-screen bg-[#f6f7fb] text-[#18213b]">
+<Suspense fallback={<div className="w-64 shrink-0 bg-[#0b1330]" />}>
       <Sidebar role={role} userName={DEMO_USER_NAMES[role]} />
-      <main className="layout-main">{children}</main>
+    </Suspense>
+      <main className="flex-1 min-w-0 p-6 lg:p-8 overflow-auto">{children}</main>
     </div>
   );
 }

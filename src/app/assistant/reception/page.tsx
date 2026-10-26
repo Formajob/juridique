@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { DEMO_CASES } from '@/lib/demo-cases';
 
 const ETAPE_LABELS: Record<string, string> = {
@@ -39,6 +40,10 @@ export default function AssistantReceptionPage() {
           <p style={{ fontSize: 13, color: 'var(--texte-secondaire)' }}>Note le statut de réception et la remise des documents.</p>
         </div>
       </header>
+
+      <div style={{ marginBottom: 16 }}>
+        <Link href="/assistant/saisie" className="btn-pill">Saisir un nouveau dossier</Link>
+      </div>
 
       <div style={{ display: 'grid', gap: 20 }}>
         <div className="card">
