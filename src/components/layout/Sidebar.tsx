@@ -1,20 +1,32 @@
 ﻿'use client';
 
+/**
+ * Remplace src/components/layout/Sidebar.tsx
+ * Menu validé : navy, logo, « By ACX Maroc », entrée active en cyan.
+ * Ne pas le recopier dans les pages : RoleLayout l'affiche déjà.
+ */
+
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
-import { getMenu, type Role } from '@/lib/menu';
+import { useEffect, useState } from 'react';
 import { FlowLogo, FlowTag } from '@/components/brand/FlowBrand';
+import { getMenu, type Role } from '@/lib/menu';
 
 interface SidebarProps {
   role: Role;
   userName?: string;
 }
 
-const USER_ROLES: Record<Role, string> = {
+const ROLE_LABEL: Record<Role, string> = {
   admin: 'Responsable département',
   juriste: 'Juriste',
   assistant: 'Assistant',
+};
+
+const SPACE_LABEL: Record<Role, string> = {
+  admin: 'Espace Juridique',
+  juriste: 'Espace Juridique',
+  assistant: 'Espace Assistant',
 };
 
 function hrefMatches(currentPath: string, currentSearch: string, href: string) {
@@ -25,7 +37,6 @@ function hrefMatches(currentPath: string, currentSearch: string, href: string) {
   for (const [key, value] of target.entries()) {
     if (current.get(key) !== value) return false;
   }
-  // If target has no query, only match when current has no query too.
   if (query === '' && current.toString() !== '') return false;
   return true;
 }
@@ -39,75 +50,62 @@ export default function Sidebar({ role, userName = role.charAt(0).toUpperCase() 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const item of menu.items) {
-      if (item.subitems?.length) {
-        const childActive = item.subitems.some((sub) => hrefMatches(pathname, search, sub.href));
-        const parentActive = hrefMatches(pathname, search, item.href);
-        initial[item.id] = childActive || parentActive;
-      }
+      if (!item.subitems?.length) continue;
+      const childActive = item.subitems.some((sub) => hrefMatches(pathname, search, sub.href));
+      initial[item.id] = childActive || item.id === 'dossiers';
     }
     return initial;
   });
 
-  const toggleGroup = (id: string) => {
-    setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  useEffect(() => {
+    setOpenGroups((prev) => {
+      const next = { ...prev };
+      for (const item of menu.items) {
+        if (!item.subitems?.length) continue;
+        const childActive = item.subitems.some((sub) => hrefMatches(pathname, search, sub.href));
+        if (childActive) next[item.id] = true;
+      }
+      return next;
+    });
+  }, [menu.items, pathname, search]);
 
   return (
-    <aside className="w-64 shrink-0 bg-[#0b1330] text-white flex flex-col min-h-screen border-r border-white/10">
-      <div className="px-5 py-6 flex flex-col items-start gap-2 border-b border-white/10">
-        <FlowLogo variant="light" height={34} />
-        <FlowTag variant="light" />
-      </div>
-
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+    <aside className="jx-side">
+      <style>{CSS}</style>
+      <FlowLogo variant="light" height={30} />
+      <FlowTag variant="light" />
+      <p className="space">{SPACE_LABEL[role]}</p>
+      <nav>
         {menu.items.map((item) => {
           const hasSub = !!item.subitems?.length;
           const parentActive = hrefMatches(pathname, search, item.href);
-          const childActive = hasSub ? item.subitems!.some((sub) => hrefMatches(pathname, search, sub.href)) : false;
           const open = openGroups[item.id] ?? false;
 
-          return (
-            <div key={item.id} className="space-y-0.5">
-              {hasSub ? (
-                <button
-                  type="button"
-                  onClick={() => toggleGroup(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                    parentActive || childActive
-                      ? 'bg-white/10 text-white font-semibold'
-                      : 'text-white/80 hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  <span>{item.label}</span>
-                  <span className="text-xs text-white/60">{open ? '▾' : '▸'}</span>
-                </button>
-              ) : (
-                <Link
-                  href={item.href}
-                  className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                    parentActive
-                      ? 'bg-white/15 text-white font-semibold'
-                      : 'text-white/80 hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              )}
+          if (!hasSub) {
+            return (
+              <Link key={item.id} href={item.href} className={parentActive ? 'nav on' : 'nav'} aria-current={parentActive ? 'page' : undefined}>
+                {item.label}
+              </Link>
+            );
+          }
 
-              {hasSub && open && (
-                <div className="ml-3 pl-3 border-l border-white/15 flex flex-col gap-0.5">
+          return (
+            <div key={item.id}>
+              <button
+                type="button"
+                className="nav parent"
+                aria-expanded={open}
+                onClick={() => setOpenGroups((prev) => ({ ...prev, [item.id]: !open }))}
+              >
+                {item.label}
+                <span className="caret">{open ? '▾' : '▸'}</span>
+              </button>
+              {open && (
+                <div className="kids">
                   {item.subitems!.map((sub) => {
                     const active = hrefMatches(pathname, search, sub.href);
                     return (
-                      <Link
-                        key={sub.id}
-                        href={sub.href}
-                        className={`block px-2 py-1.5 rounded-md text-xs transition-colors ${
-                          active
-                            ? 'bg-white text-[#0b1330] font-semibold'
-                            : 'text-white/70 hover:bg-white/10 hover:text-white'
-                        }`}
-                      >
+                      <Link key={sub.id} href={sub.href} className={active ? 'child on' : 'child'} aria-current={active ? 'page' : undefined}>
                         {sub.label}
                       </Link>
                     );
@@ -118,19 +116,71 @@ export default function Sidebar({ role, userName = role.charAt(0).toUpperCase() 
           );
         })}
       </nav>
-
-      <div className="px-5 py-4 border-t border-white/10">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center text-sm font-semibold">
-            {userName.charAt(0).toUpperCase()}
-          </div>
-          <div className="min-w-0">
-            <div className="text-sm font-medium truncate">{userName}</div>
-            <div className="text-xs text-white/60 truncate">{USER_ROLES[role]}</div>
-          </div>
-        </div>
-        <div className="text-[11px] text-white/40">Démo v1.0</div>
+      <div className="foot">
+        <strong>{userName}</strong>
+        {ROLE_LABEL[role]}
       </div>
     </aside>
   );
 }
+
+const CSS = `
+.jx-side {
+  width: 248px;
+  flex-shrink: 0;
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 12px 16px;
+  color: #d5deef;
+  background: #0b1330;
+  font-family: Inter, ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+}
+.jx-side * { box-sizing: border-box; }
+.jx-side .flow-logo { width: 196px; height: 30px; object-fit: contain; object-position: left center; }
+.jx-side .flow-tag { margin: 8px 0 16px; }
+.jx-side .space {
+  margin: 0 8px 10px;
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #8ea0c3;
+  font-weight: 800;
+}
+.jx-side nav { display: flex; flex-direction: column; gap: 2px; flex: 1; overflow-y: auto; }
+.jx-side .nav, .jx-side .child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #c5cee2;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+}
+.jx-side .nav { padding: 9px 12px; font-weight: 700; font-size: 14px; }
+.jx-side .child { padding: 7px 12px 7px 28px; font-size: 13px; font-weight: 650; color: #aeb9d2; }
+.jx-side .nav:hover, .jx-side .child:hover { background: rgba(255,255,255,.05); color: #fff; }
+.jx-side .nav.on, .jx-side .child.on {
+  background: rgba(38,212,234,.12);
+  color: #fff;
+  box-shadow: inset 3px 0 0 #26d4ea;
+}
+.jx-side .kids { display: flex; flex-direction: column; margin: 0 0 4px; }
+.jx-side .caret { font-size: 10px; opacity: .7; }
+.jx-side .foot {
+  margin-top: auto;
+  padding: 12px 8px 0;
+  border-top: 1px solid rgba(255,255,255,.08);
+  font-size: 12px;
+  color: #9aabc4;
+}
+.jx-side .foot strong { display: block; color: #fff; font-size: 13px; }
+`;
