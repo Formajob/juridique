@@ -17,7 +17,14 @@ import { BRANCHES } from '@/lib/workflow-branch';
 const MOIS_C = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
 const BUREAU = ['Juriste 1', 'Juriste 2', 'Assistant 1', 'Assistant 2', 'Assistant 3'];
 
-const GROUPS: { id: string; label: string; stock: boolean; codes: string[] }[] = [
+interface StepGroup {
+  id: string;
+  label: string;
+  stock: boolean;
+  codes: string[];
+}
+
+const GROUPS: StepGroup[] = [
   { id: 'constatations', label: 'Constatations', stock: true, codes: ['constatation_recue'] },
   { id: 'analyse', label: 'Analyse', stock: true, codes: ['analyse_gravite'] },
   { id: 'convocations', label: 'Convocations', stock: true, codes: ['convocation_seance'] },
@@ -70,6 +77,14 @@ function elapsed(iso: string) {
   const h = Math.floor(ms / 3600000);
   const m = Math.floor((ms % 3600000) / 60000);
   return h > 0 ? `${h} h ${pad(m)}` : `${m} min`;
+}
+function presenceCode(value: unknown): string {
+  if (typeof value === 'string' && value) return value;
+  if (value && typeof value === 'object') {
+    const id = (value as { id?: unknown }).id;
+    if (typeof id === 'string' && id) return id;
+  }
+  return 'absent';
 }
 
 export default function AdminDashboardPage() {
@@ -199,9 +214,9 @@ export default function AdminDashboardPage() {
           <p className="hint">Deux juristes, trois assistants. Pas les agents, pas la production.</p>
           <div className="people">
             {people.map((s) => {
-              const statut = s!.statut || 'absent';
-              const tag = TAGS[statut] || TAGS.absent;
-              const actif = !['absent', 'conge'].includes(statut);
+              const code = presenceCode(s!.statut);
+              const tag = TAGS[code] || TAGS.absent;
+              const actif = code !== 'absent' && code !== 'conge';
               return (
                 <article key={s!.id} className="person">
                   <div className="who">{s!.utilisateur?.nom}</div>

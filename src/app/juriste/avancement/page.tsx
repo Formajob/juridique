@@ -1,8 +1,17 @@
 'use client';
 
+/**
+ * Même fichier pour :
+ * src/app/admin/avancement/page.tsx
+ * src/app/juriste/avancement/page.tsx
+ * Bulle : clic sur une référence, boutons de sortie de ce dossier seul.
+ * Notifier seulement sur Convocation : aperçu, aucun champ d'adresse.
+ */
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSyncExternalStore } from 'react';
-import { getWorkflowState, subscribeWorkflow } from '@/lib/workflow-store';
+import { usePathname } from 'next/navigation';
+import { getWorkflowState, setWorkflowState, subscribeWorkflow, transitionCase } from '@/lib/workflow-store';
 
 type Status = 'delai' | 'retard' | 'attente' | 'clos';
 interface DossierItem { ref: string; lob: string; agent: string; juriste: string; statut: Status; detail: string; echeance: string | null; }
@@ -14,14 +23,14 @@ const W = 136, H = 56, BUS = 1188;
 
 const STEP_META: StepMeta[] = [
   { id: 'constatation_recue', x: 342, y: 8, label: 'Constatation reçue', onglet: 'Constatations', echeance: '8 jours pour lancer l’analyse', next: [{ id: 'analyse_gravite', label: 'Lancer l’analyse' }] },
-  { id: 'analyse_gravite', x: 342, y: 112, label: 'Analyse', onglet: 'Analyse', echeance: '8 jours après la réception', next: [{ id: 'sanction_faute_non_grave', label: 'Faute non grave : sanction directe' }, { id: 'convocation_seance', label: 'Faute grave : convocation' }] },
+  { id: 'analyse_gravite', x: 342, y: 112, label: 'Analyse', onglet: 'Analyse', echeance: '8 jours après la réception', next: [{ id: 'convocation_seance', label: 'Faute grave' }, { id: 'sanction_faute_non_grave', label: 'Faute non grave' }] },
   { id: 'sanction_faute_non_grave', x: 24, y: 248, label: 'Sanction directe', onglet: 'Décisions', echeance: 'Pas de séance. Pas d’inspection.', next: [{ id: 'cloture', label: 'Clore' }] },
-  { id: 'convocation_seance', x: 342, y: 248, label: 'Convocation', onglet: 'Convocations', echeance: '8 jours · présence non notée', next: [{ id: 'seance_presente', label: 'Présent : noter la séance' }, { id: 'seance_absente', label: 'Absent : noter l’absence' }] },
-  { id: 'seance_presente', x: 180, y: 400, label: 'Séance présente', onglet: 'Séances', echeance: 'Le papier reste dehors', next: [{ id: 'pv_seance', label: 'Noter le PV remis' }] },
-  { id: 'pv_seance', x: 180, y: 528, label: 'PV de séance', onglet: 'Séances', echeance: 'Choix non saisi', next: [{ id: 'decision_licenciement', label: 'Faute grave : licenciement' }, { id: 'decision_mise_a_pied', label: 'Faute grave : mise à pied' }, { id: 'decision_sanction', label: 'Faute non grave : sanction' }, { id: 'fin_procedure', label: 'Absence du fait' }] },
+  { id: 'convocation_seance', x: 342, y: 248, label: 'Convocation', onglet: 'Convocations', echeance: '8 jours · présence non notée', next: [{ id: 'seance_presente', label: 'Présent' }, { id: 'seance_absente', label: 'Absent' }] },
+  { id: 'seance_presente', x: 180, y: 400, label: 'Séance présente', onglet: 'Séances', echeance: 'Le papier reste dehors', next: [{ id: 'pv_seance', label: 'PV remis' }] },
+  { id: 'pv_seance', x: 180, y: 528, label: 'PV de séance', onglet: 'Séances', echeance: 'Choix non saisi', next: [{ id: 'decision_licenciement', label: 'Licenciement' }, { id: 'decision_mise_a_pied', label: 'Mise à pied' }, { id: 'decision_sanction', label: 'Sanction' }, { id: 'fin_procedure', label: 'Absence du fait' }] },
   { id: 'seance_absente', x: 520, y: 400, label: 'Agent absent', onglet: 'Séances', echeance: 'Dépôt non saisi', next: [{ id: 'depot_inspection_absence', label: 'Déposer à l’inspection' }] },
   { id: 'depot_inspection_absence', x: 520, y: 528, label: 'Dépôt inspection', onglet: 'Décisions', echeance: 'Branche absence', next: [{ id: 'investigations', label: 'Ouvrir les investigations' }] },
-  { id: 'investigations', x: 520, y: 656, label: 'Investigations', onglet: 'Décisions', echeance: 'L’outil note l’ouverture. Il n’enquête pas.', next: [{ id: 'decision_licenciement', label: 'Faute grave : licenciement' }, { id: 'decision_mise_a_pied', label: 'Faute grave : mise à pied' }, { id: 'decision_sanction', label: 'Faute non grave : sanction' }, { id: 'fin_procedure', label: 'Absence du fait' }] },
+  { id: 'investigations', x: 520, y: 656, label: 'Investigations', onglet: 'Décisions', echeance: 'L’outil note l’ouverture. Il n’enquête pas.', next: [{ id: 'decision_licenciement', label: 'Licenciement' }, { id: 'decision_mise_a_pied', label: 'Mise à pied' }, { id: 'decision_sanction', label: 'Sanction' }, { id: 'fin_procedure', label: 'Absence du fait' }] },
   { id: 'decision_licenciement', x: 180, y: 820, label: 'Licenciement', onglet: 'Décisions', echeance: 'Puis les 48 heures', next: [{ id: 'notification_48h', label: 'Rappel des 48 heures' }] },
   { id: 'decision_mise_a_pied', x: 340, y: 820, label: 'Mise à pied', onglet: 'Décisions', echeance: 'Puis les 48 heures', next: [{ id: 'notification_48h', label: 'Rappel des 48 heures' }] },
   { id: 'decision_sanction', x: 500, y: 820, label: 'Sanction', onglet: 'Décisions', echeance: 'Pas d’inspection', next: [{ id: 'cloture', label: 'Clore' }] },
@@ -33,6 +42,10 @@ const STEP_META: StepMeta[] = [
 
 export default function AvancementPage() {
   const snap = useSyncExternalStore(subscribeWorkflow, getWorkflowState, getWorkflowState);
+  const base = (usePathname() || '').startsWith('/juriste') ? '/juriste' : '/admin';
+  const [picked, setPicked] = useState<string | null>(null);
+  const [mailRef, setMailRef] = useState<string | null>(null);
+  const [notice, setNotice] = useState('');
   const byId = Object.fromEntries(STEP_META.map(s => [s.id, s]));
   function dossiersFor(code: string): DossierItem[] {
     return snap.cases.filter(c => c.etape === code).map(c => {
@@ -103,7 +116,7 @@ export default function AvancementPage() {
     if (!card) return;
     const r = card.getBoundingClientRect();
     const pop = popRef.current;
-    const bw = 270; const bh = pop.offsetHeight || 220;
+    const bw = 340; const bh = pop.offsetHeight || 280;
     const vw = window.innerWidth; const vh = window.innerHeight; const gap = 12;
     let left = 0, top = 0, cls = '';
     if (r.right + gap + bw <= vw - 8) { cls = 'pop right'; left = r.right + gap; top = r.top - 4; }
@@ -115,13 +128,45 @@ export default function AvancementPage() {
     const tail = cls === 'pop right' || cls === 'pop left' ? r.top + r.height / 2 - top - 6 : r.left + r.width / 2 - left - 6;
     setPopStyle({ left, top, cls, tail: Math.max(16, tail) });
   }, [selectedId]);
-  useEffect(() => { if (selectedId) requestAnimationFrame(() => placePop()); else setPopStyle(null); }, [selectedId, placePop]);
+  useEffect(() => { if (selectedId) requestAnimationFrame(() => placePop()); else setPopStyle(null); }, [selectedId, picked, mailRef, notice, placePop]);
   useEffect(() => {
     function onScrollResize() { if (selectedId) placePop(); }
     window.addEventListener('scroll', onScrollResize, true);
     window.addEventListener('resize', onScrollResize);
     return () => { window.removeEventListener('scroll', onScrollResize, true); window.removeEventListener('resize', onScrollResize); };
   }, [selectedId, placePop]);
+
+  function needsNotify(stepId: string) {
+    return stepId === 'convocation_seance';
+  }
+  function pick(ref: string) {
+    setPicked((cur) => (cur === ref ? null : ref));
+    setMailRef(null);
+    setNotice('');
+  }
+  function openPreview(ref: string) {
+    setPicked(ref);
+    setMailRef((cur) => (cur === ref ? null : ref));
+    setNotice('');
+  }
+  function decide(ref: string, to: string, label: string) {
+    transitionCase(ref, to, label, 'Avancement');
+    const s = getWorkflowState();
+    const stepIds = new Set(STEP_META.map((step) => step.id));
+    const cases = s.cases.map((c) => {
+      if (c.reference !== ref) return c;
+      const next = { ...c, etape: to };
+      const current = (c as { statut?: unknown }).statut;
+      if (typeof current === 'string' && (current === c.etape || stepIds.has(current) || current === '')) (next as { statut: string }).statut = to;
+      return next;
+    });
+    setWorkflowState({ ...s, cases });
+    setPicked(null);
+    setMailRef(null);
+    setNotice(ref + ' · ' + label + '. Étape du dossier : ' + (byId[to]?.label || to) + '.');
+    setSelectedId(to);
+  }
+
   const total = snap.cases.length;
   const enCours = snap.cases.filter(c => c.etape !== 'cloture').length;
   const clos = snap.cases.filter(c => c.etape === 'cloture').length;
@@ -158,7 +203,7 @@ export default function AvancementPage() {
         .late { color: var(--rouge); font-weight: 750; }
         .onarrow { position: absolute; z-index: 4; transform: translate(-50%, -50%); background: #fff; border: 1px solid #d5deec; border-radius: 999px; padding: 2px 7px; font-size: 11px; font-weight: 750; color: var(--navy); white-space: nowrap; pointer-events: none; line-height: 1.3; }
         .onarrow.hot { border-color: var(--cyan-d); color: var(--cyan-d); background: #f3fcfe; }
-        .pop { position: fixed; display: block; width: 270px; z-index: 50; background: #fff; border: 1px solid #9eeaf4; border-radius: 16px; box-shadow: 0 16px 36px rgba(11,19,48,.16); padding: 12px 12px 10px; }
+        .pop { position: fixed; display: block; width: 340px; max-height: min(78vh, 640px); overflow: auto; z-index: 50; background: #fff; border: 1px solid #9eeaf4; border-radius: 16px; box-shadow: 0 16px 36px rgba(11,19,48,.16); padding: 12px 12px 10px; }
         .pop:before { content: ""; position: absolute; width: 12px; height: 12px; background: #fff; border: 1px solid #9eeaf4; transform: rotate(45deg); }
         .pop.right:before { left: -7px; top: var(--tail, 22px); border-right: 0; border-top: 0; }
         .pop.left:before { right: -7px; top: var(--tail, 22px); border-left: 0; border-bottom: 0; }
@@ -170,25 +215,38 @@ export default function AvancementPage() {
         .where { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
         .ensuite { margin: 12px 0; padding: 10px; border-radius: 12px; background: #f4fcfe; border: 1px solid #d7f4f8; }
         .ensuite p { margin: 0 0 6px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--cyan-d); font-weight: 800; }
-        .ensuite button { display: block; width: 100%; text-align: left; margin-top: 6px; cursor: pointer; border: 1px solid #d7f4f8; background: #fff; border-radius: 10px; padding: 7px 8px; color: var(--navy); font-size: 12.5px; font-weight: 700; }
+        .ensuite button, .go { display: block; width: 100%; text-align: left; margin-top: 6px; cursor: pointer; border: 1px solid #d7f4f8; background: #fff; border-radius: 10px; padding: 7px 8px; color: var(--navy); font-size: 12.5px; font-weight: 700; }
+        .go small { display: block; font-weight: 650; color: var(--muted); font-size: 11px; }
         .pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
         .pill { font-size: 11.5px; border-radius: 999px; padding: 3px 8px; font-weight: 750; }
         .ok { background: var(--vert-bg); color: var(--vert); }
         .bad { background: var(--rouge-bg); color: var(--rouge); }
         .wait { background: var(--ambre-bg); color: var(--ambre); }
         .mute { background: #f3f6fb; color: var(--muted); }
-        ul.dossiers { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 168px; overflow: auto; }
+        ul.dossiers { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 220px; overflow: auto; }
+        ul.dossiers li.on { background: #f4fcfe; border-radius: 10px; padding: 8px; }
         ul.dossiers li { border-top: 1px solid var(--filet); padding-top: 8px; }
         .ref { font-weight: 750; font-size: 13px; color: var(--navy); }
         .meta { font-size: 12px; color: var(--muted); line-height: 1.35; }
         .note { margin: 10px 12px 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+
+        .refbtn, .notify { border: 0; background: transparent; padding: 0; cursor: pointer; text-align: left; }
+        .refbtn { font-weight: 750; font-size: 13px; color: var(--navy); text-decoration: underline; }
+        .refbtn.on { color: var(--cyan-d); }
+        .notify { display: inline-block; margin-top: 4px; border-radius: 999px; padding: 4px 8px; background: var(--navy); color: #fff; font-size: 11px; font-weight: 800; }
+        .preview { display: grid; gap: 6px; margin-top: 8px; padding: 10px; border-radius: 12px; background: #f7f9fc; border: 1px solid var(--filet); }
+        .preview p { margin: 0; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--cyan-d); font-weight: 800; }
+        .preview .line { font-size: 12px; color: var(--encre); line-height: 1.4; }
+        .preview .line b { display: inline-block; min-width: 52px; color: var(--muted); font-size: 11px; }
+        .preview pre { margin: 0; white-space: pre-wrap; font: inherit; font-size: 12px; line-height: 1.45; color: var(--encre); }
+        .preview button { border: 0; border-radius: 999px; background: #f3f6fb; color: var(--navy); padding: 6px 8px; font-weight: 800; cursor: pointer; }
         @media (max-width: 980px) { .stats { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 640px) { .stats { grid-template-columns: 1fr 1fr; } }
       `}</style>
       <main className="page">
         <div className="kicker"><i></i> Données réelles · workflow partagé</div>
         <h1>Avancement</h1>
-        <p className="lead">Le schéma se lit de haut en bas. La mention est sur la flèche. Un clic fait sortir la bulle de la carte.</p>
+        <p className="lead">Le schéma se lit de haut en bas. La mention est sur la flèche. Un clic fait sortir la bulle. Une référence ouvre les sorties de ce dossier seul. Notifier, seulement sur Convocation, montre l'aperçu du mail. Les adresses ne se saisissent pas ici.</p>
         <section className="stats">
           <div className="stat"><b>{total}</b><span>Dossiers</span></div>
           <div className="stat"><b>{enCours}</b><span>En cours</span></div>
@@ -217,7 +275,7 @@ export default function AvancementPage() {
               const isOn = selectedId === step.id;
               const isNext = nextIds.has(step.id);
               return (
-                <button key={step.id} type="button" data-id={step.id} className={`card ${empty ? 'empty' : ''} ${isOn ? 'on' : ''} ${isNext ? 'next' : ''}`} style={{ left: step.x, top: step.y }} onClick={() => setSelectedId(prev => (prev === step.id ? null : step.id))}>
+                <button key={step.id} type="button" data-id={step.id} className={`card ${empty ? 'empty' : ''} ${isOn ? 'on' : ''} ${isNext ? 'next' : ''}`} style={{ left: step.x, top: step.y }} onClick={() => { setPicked(null); setMailRef(null); setNotice(''); setSelectedId(prev => (prev === step.id ? null : step.id)); }}>
                   <div className="ong">{step.onglet}</div>
                   <div className="n">{step.dossiers.length}</div>
                   <div className="lab">{step.label}</div>
@@ -239,12 +297,7 @@ export default function AvancementPage() {
             <button className="x" type="button" aria-label="Fermer" onClick={() => setSelectedId(null)}>×</button>
           </div>
           <p className="where">{selectedStep.echeance}</p>
-          <div className="ensuite">
-            <p>Sortie suivante</p>
-            {selectedStep.next.length ? selectedStep.next.map(nx => (
-              <button key={nx.id} type="button" data-go={nx.id} onClick={() => setSelectedId(nx.id)}>? {nx.label}</button>
-            )) : <div className="where">Aucune sortie. Le dossier est clos.</div>}
-          </div>
+          <p className="where">La sortie se décide dossier par dossier. Clique une référence.</p>
           {selectedStep.dossiers.length ? (
             <>
               <div className="pills">
@@ -255,18 +308,57 @@ export default function AvancementPage() {
               </div>
               <ul className="dossiers">
                 {selectedStep.dossiers.map(d => (
-                  <li key={d.ref}>
-                    <div className="ref">{d.ref}</div>
-                    <div className="meta">{d.lob} · {d.agent} · {d.juriste}<br />{d.detail}</div>
+                  <li key={d.ref} className={picked === d.ref ? 'on' : ''}>
+                    <button type="button" className={`refbtn${picked === d.ref ? ' on' : ''}`} onClick={() => pick(d.ref)}>{d.ref}</button>
+                    <div className="meta">{d.lob} · {d.agent}<br />{d.detail}</div>
+                    {needsNotify(selectedStep.id) && <button type="button" className="notify" onClick={() => openPreview(d.ref)}>Notifier</button>}
                   </li>
                 ))}
               </ul>
-            </>
+              {picked && selectedStep.dossiers.some(d => d.ref === picked) && (
+                <div className="ensuite">
+                  <p>Sortie suivante · {picked}</p>
+                  {selectedStep.next.length ? selectedStep.next.map(nx => (
+                    <button key={nx.id} type="button" className="go" onClick={() => decide(picked, nx.id, nx.label)}>
+                      {nx.label}
+                      <small>vers {byId[nx.id]?.label || nx.id}</small>
+                    </button>
+                  )) : <div className="where">Aucune sortie. Le dossier est clos.</div>}
+                </div>
+              )}
+              </>
           ) : (
             <p className="where">Aucun dossier sur cette étape.</p>
           )}
+          {mailRef && needsNotify(selectedStep.id) && <MailPreview dossier={mailRef} onClose={() => setMailRef(null)} />}
+          {notice && <p className="where">{notice}</p>}
         </div>
       )}
+    </div>
+  );
+}
+
+function MailPreview({ dossier, onClose }: { dossier: string; onClose: () => void }) {
+  const s = getWorkflowState();
+  const c = s.cases.find((x) => x.reference === dossier);
+  const appt = s.appointments.filter((a) => a.dossier === dossier).sort((a, b) => String(b.createdAt || b.debut).localeCompare(String(a.createdAt || a.debut)))[0];
+  const when = appt ? new Date(appt.debut).toLocaleString('fr-FR') + ' · ' + appt.lieu : 'Créneau non encore posé.';
+  const body = [
+    'Convocation à une séance.',
+    'Dossier : ' + dossier,
+    'Agent : ' + (c?.agentId || 'non précisé'),
+    'Créneau : ' + when,
+    'Cette note ne qualifie pas les faits.',
+  ].join('\n');
+  return (
+    <div className="preview">
+      <p>Aperçu · notification</p>
+      <div className="line"><b>À</b> Agent du dossier · adresse ajoutée automatiquement</div>
+      <div className="line"><b>Copie</b> TL et SPV · ajoutés automatiquement</div>
+      <div className="line"><b>Objet</b> Convocation {dossier}</div>
+      <pre>{body}</pre>
+      <p className="where">Aperçu seulement. Aucune adresse n'est saisie, aucune n'est inventée, rien n'est envoyé.</p>
+      <button type="button" onClick={onClose}>Fermer l'aperçu</button>
     </div>
   );
 }

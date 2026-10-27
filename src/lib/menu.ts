@@ -35,9 +35,6 @@ export const MENU_JURISTE: RoleMenu = { id: 'juriste', label: 'Juriste', items: 
   { id: 'search', label: 'Recherche', href: '/juriste/recherche' },
 ]};
 export const MENU_ASSISTANT: RoleMenu = { id: 'assistant', label: 'Assistant', items: [
-  { id: 'reception', label: 'Réception', href: '/assistant/reception' },
-  { id: 'scanner', label: 'Scanner', href: '/assistant/scanner' },
-  { id: 'documents', label: 'Documents', href: '/assistant/documents' },
   { id: 'pointage', label: 'Pointage', href: '/assistant/pointage' },
 ]};
 export type Role = 'admin' | 'juriste' | 'assistant';
