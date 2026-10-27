@@ -193,7 +193,7 @@ export function departureOf(personId: string, day = dayKey()) {
   return getPresence().departures.find((d) => d.personId === personId && d.day === day);
 }
 
-export function secondsOf(segment: Segment, now = new Date()) {
+export function secondsOf(segment: { start: string; end: string | null }, now = new Date()) {
   const end = segment.end ? new Date(segment.end).getTime() : now.getTime();
   return Math.max(0, Math.floor((end - new Date(segment.start).getTime()) / 1000));
 }

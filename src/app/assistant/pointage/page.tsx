@@ -14,6 +14,7 @@ import { usePathname } from 'next/navigation';
 import {
   PEOPLE,
   TAGS,
+  Segment,
   TagId,
   dayKey,
   formatClock,
@@ -189,7 +190,7 @@ export default function PointagePage() {
   );
 }
 
-function Journal({ mine, now }: { mine: { id: string; tag: TagId; start: string; end: string | null }[]; now: Date }) {
+function Journal({ mine, now }: { mine: Segment[]; now: Date }) {
   const ordered = [...mine].sort((a, b) => a.start.localeCompare(b.start));
   return (
     <section className="card journal">
@@ -221,7 +222,7 @@ function Journal({ mine, now }: { mine: { id: string; tag: TagId; start: string;
   );
 }
 
-function Farewell({ person, gone, mine, now }: { person: string; gone: { discharge: string; gapMin: number | null; at: string }; mine: { id: string; tag: TagId; start: string; end: string | null }[]; now: Date }) {
+function Farewell({ person, gone, mine, now }: { person: string; gone: { discharge: string; gapMin: number | null; at: string }; mine: Segment[]; now: Date }) {
   const totals = TAGS.map((t) => ({
     t,
     sec: mine.filter((s) => s.tag === t.id).reduce((sum, s) => sum + secondsOf(s, now), 0),

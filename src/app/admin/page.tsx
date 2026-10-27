@@ -1,7 +1,9 @@
 ﻿'use client';
 
 /**
- * Remplace uniquement src/app/admin/page.tsx
+ * Remplace src/app/admin/dashboard/page.tsx
+ * Si src/app/admin/page.tsx est aussi le tableau de bord, remplace-le avec ce même fichier.
+ * Export par défaut sans props obligatoires : exigé par le validateur Next (AppPageConfig).
  * Ne pas recopier le menu : il est dans src/components/layout/Sidebar.tsx.
  * Les chiffres sont lus dans les dossiers du projet. Échéances est une vue, pas une septième pile.
  */
@@ -87,7 +89,10 @@ function presenceCode(value: unknown): string {
   return 'absent';
 }
 
-export default function AdminDashboardPage() {
+export default function AdminDashboardPage(_props?: {
+  params?: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const snap = useSyncExternalStore(subscribeWorkflow, getWorkflowState, getWorkflowState);
   const today = useMemo(() => new Date(), []);
   const todayIso = dayKey(today);
