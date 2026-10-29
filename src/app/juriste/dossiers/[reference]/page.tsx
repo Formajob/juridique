@@ -26,7 +26,11 @@ export default function JuristeDossierDetailPage() {
 
   useEffect(() => {
     if (dossier) {
-      markAsRead(reference);
+      // Les dossiers clos ne sont pas marqués comme lus : la notification persiste
+      // pour indiquer le nombre de dossiers non-consultés dans cet onglet.
+      if (dossier.etape !== 'cloture') {
+        markAsRead(reference);
+      }
     }
   }, [dossier?.reference]);
 

@@ -1,16 +1,18 @@
-﻿'use client';
+'use client';
 
 /**
- * Remplace src/components/layout/Sidebar.tsx
- * Menu validé : navy, logo, « By ACX Maroc », entrée active en cyan.
+ * Menu latéral ACX Flow : navy, logo, « By ACX Maroc », icônes, sous-menus animés.
  * Ne pas le recopier dans les pages : RoleLayout l'affiche déjà.
+ * Styles : src/styles/flow-shell.css (préfixe .fx-).
  */
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { setWorkflowState, getWorkflowState, subscribeWorkflow } from '@/lib/workflow-store';
+import { getWorkflowState, subscribeWorkflow } from '@/lib/workflow-store';
+import { etapePageGroup } from '@/lib/workflow-ui';
 import { FlowLogo, FlowTag } from '@/components/brand/FlowBrand';
+import { IconChevron, MenuIcon } from '@/components/flow/icons';
 import { getMenu, type Role } from '@/lib/menu';
 
 interface SidebarProps {

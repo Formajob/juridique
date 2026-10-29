@@ -1,0 +1,718 @@
+/* ACX Flow : coque de l'application (menu latéral) et composants du tableau de bord.
+   Préfixe .fx- ; les couleurs reprennent la charte de flow.acx.ma (navy / cyan). */
+
+:root {
+  --fx-navy: #0b1330;
+  --fx-navy-2: #192754;
+  --fx-cyan: #26d4ea;
+  --fx-cyan-d: #0a8fa2;
+  --fx-ink: #18213b;
+  --fx-mute: #62708a;
+  --fx-line: #e4e8f1;
+  --fx-paper: #f6f7fb;
+  --fx-soon-bg: #fff3d6;
+  --fx-soon: #7a4f00;
+  --fx-late-bg: #fde8e6;
+  --fx-late: #b42318;
+}
+
+/* ───────────── Coque ───────────── */
+
+.fx-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--fx-paper);
+  color: var(--fx-ink);
+}
+
+.fx-main {
+  flex: 1;
+  min-width: 0;
+  padding: 28px 32px 56px;
+}
+
+.fx-side-fallback {
+  width: 256px;
+  flex-shrink: 0;
+  background: var(--fx-navy);
+}
+
+/* ───────────── Menu latéral ───────────── */
+
+.fx-side {
+  width: 256px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px 14px;
+  color: #c5cee2;
+  background: var(--fx-navy);
+  font-family: inherit;
+}
+
+.fx-side * {
+  box-sizing: border-box;
+}
+
+.fx-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 8px;
+}
+
+.fx-side .flow-logo {
+  width: 184px;
+  height: 28px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.fx-side .flow-tag {
+  margin: 0;
+}
+
+.fx-space {
+  margin: 22px 10px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7f90b3;
+}
+
+.fx-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.fx-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #b4c0da;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.fx-item .fx-ico {
+  flex-shrink: 0;
+  color: #7f90b3;
+  transition: color 0.15s ease;
+}
+
+.fx-label {
+  flex: 1;
+}
+
+.fx-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.fx-item:hover .fx-ico {
+  color: #d5deef;
+}
+
+.fx-item.on {
+  background: rgba(38, 212, 234, 0.13);
+  color: #fff;
+  box-shadow: inset 3px 0 0 var(--fx-cyan);
+}
+
+.fx-item.on .fx-ico,
+.fx-item.has-on .fx-ico {
+  color: var(--fx-cyan);
+}
+
+.fx-item.has-on {
+  color: #fff;
+}
+
+.fx-caret {
+  color: #7f90b3;
+  transition: transform 0.2s ease;
+}
+
+.fx-item.open .fx-caret {
+  transform: rotate(90deg);
+}
+
+.fx-kids {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.22s ease;
+}
+
+.fx-kids.open {
+  grid-template-rows: 1fr;
+}
+
+.fx-kids-in {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-left: 21px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fx-kids.open .fx-kids-in {
+  margin-top: 2px;
+  margin-bottom: 4px;
+}
+
+.fx-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  color: #97a6c6;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.fx-child:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.fx-child.on {
+  background: rgba(38, 212, 234, 0.1);
+  color: var(--fx-cyan);
+}
+
+.fx-badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #ff8a7a;
+  color: #2a0f0b;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 20px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.fx-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 14px 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fx-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(38, 212, 234, 0.35);
+  background: var(--fx-navy-2);
+  color: var(--fx-cyan);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fx-user-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+}
+
+.fx-user-text strong {
+  color: #fff;
+  font-size: 13px;
+}
+
+.fx-user-text span {
+  color: #8ea0c3;
+  font-size: 12px;
+}
+
+.fx-side a:focus-visible,
+.fx-side button:focus-visible {
+  outline: 2px solid var(--fx-cyan);
+  outline-offset: 2px;
+}
+
+/* ───────────── En-tête de page ───────────── */
+
+.fx-page {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.fx-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.fx-head-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fx-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--fx-navy);
+}
+
+.fx-sub {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--fx-mute);
+}
+
+.fx-sub::first-letter {
+  text-transform: uppercase;
+}
+
+.fx-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(38, 212, 234, 0.14);
+  color: var(--fx-cyan-d);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fx-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fx-cyan);
+}
+
+.fx-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: var(--fx-navy);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.fx-btn:hover {
+  background: var(--fx-navy-2);
+}
+
+.fx-btn:focus-visible,
+.fx-row:focus-visible,
+.fx-link:focus-visible,
+.fx-node-link:focus-visible {
+  outline: 2px solid var(--fx-cyan);
+  outline-offset: 2px;
+}
+
+/* ───────────── Bandeau : dossiers par étape ───────────── */
+
+.fx-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 26px 28px 22px;
+  border-radius: 20px;
+  color: #fff;
+  background:
+    radial-gradient(760px 260px at 88% -25%, rgba(38, 212, 234, 0.2), transparent 62%),
+    linear-gradient(160deg, #0b1330 0%, #131d44 100%);
+}
+
+.fx-hero-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.fx-hero-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.fx-hero-sub {
+  margin: 4px 0 0;
+  max-width: 46ch;
+  font-size: 13px;
+  color: #9fb0d2;
+}
+
+.fx-mini {
+  display: flex;
+  margin: 0;
+}
+
+.fx-mini > div {
+  padding: 0 20px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.fx-mini > div:first-child {
+  border-left: 0;
+}
+
+.fx-mini > div:last-child {
+  padding-right: 0;
+}
+
+.fx-mini dt {
+  font-size: 12px;
+  color: #9fb0d2;
+}
+
+.fx-mini dd {
+  margin: 2px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ───────────── Frise des étapes (élément signature) ───────────── */
+
+.fx-pipe {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+.fx-node {
+  position: relative;
+  text-align: center;
+}
+
+.fx-node::before,
+.fx-node::after {
+  content: '';
+  position: absolute;
+  top: 19px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+}
+
+.fx-node:first-child::before,
+.fx-node:first-child::after {
+  display: none;
+}
+
+.fx-node::before {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.fx-node::after {
+  background: var(--fx-cyan);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: fx-draw 0.42s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: calc(var(--delay) - 120ms);
+}
+
+.fx-node.is-empty::after {
+  background: rgba(38, 212, 234, 0.35);
+}
+
+.fx-node-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px 10px;
+  border-radius: 14px;
+  color: #fff;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.fx-node-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.fx-dot {
+  position: relative;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  margin-top: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: var(--fx-navy);
+}
+
+.fx-node:not(.is-empty) .fx-dot {
+  animation: fx-light 0.3s ease forwards;
+  animation-delay: var(--delay);
+}
+
+.fx-node-count {
+  margin-top: 16px;
+  font-size: 46px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.fx-node.is-empty .fx-node-count,
+.fx-node.is-empty .fx-node-label {
+  opacity: 0.45;
+}
+
+.fx-node-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #b9c4df;
+}
+
+.fx-node-wait {
+  margin-top: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(255, 196, 87, 0.13);
+  color: #ffd48a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@keyframes fx-draw {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes fx-light {
+  to {
+    background: var(--fx-cyan);
+    border-color: var(--fx-cyan);
+    box-shadow: 0 0 0 5px rgba(38, 212, 234, 0.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-node::after {
+    animation: none;
+    transform: scaleX(1);
+  }
+  .fx-node:not(.is-empty) .fx-dot {
+    animation: none;
+    background: var(--fx-cyan);
+    border-color: var(--fx-cyan);
+    box-shadow: 0 0 0 5px rgba(38, 212, 234, 0.18);
+  }
+  .fx-kids,
+  .fx-caret {
+    transition: none;
+  }
+}
+
+/* ───────────── Cartes et listes ───────────── */
+
+.fx-grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.fx-card {
+  padding: 20px 22px 12px;
+  border: 1px solid var(--fx-line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.fx-card-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fx-navy);
+}
+
+.fx-empty {
+  margin: 8px 0 12px;
+  max-width: 44ch;
+  font-size: 13px;
+  color: var(--fx-mute);
+}
+
+.fx-list,
+.fx-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fx-list li + li,
+.fx-timeline li + li {
+  border-top: 1px solid var(--fx-line);
+}
+
+.fx-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.fx-row:hover .fx-row-main strong {
+  color: var(--fx-cyan-d);
+}
+
+.fx-row-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.fx-row-main strong {
+  font-size: 14px;
+  font-weight: 700;
+  transition: color 0.15s ease;
+}
+
+.fx-row-main span {
+  font-size: 13px;
+  color: var(--fx-mute);
+}
+
+.fx-chip {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eef1f7;
+  color: var(--fx-ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fx-chip.is-soon {
+  background: var(--fx-soon-bg);
+  color: var(--fx-soon);
+}
+
+.fx-chip.is-late {
+  background: var(--fx-late-bg);
+  color: var(--fx-late);
+}
+
+.fx-timeline li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.fx-tl-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.fx-tl-text strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fx-tl-text span {
+  font-size: 13px;
+  color: var(--fx-mute);
+}
+
+.fx-tl-time {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--fx-mute);
+  white-space: nowrap;
+}
+
+.fx-link {
+  font-weight: 600;
+  color: var(--fx-cyan-d);
+  text-decoration: none;
+}
+
+.fx-link:hover {
+  text-decoration: underline;
+}
+
+/* ───────────── Écrans étroits ───────────── */
+
+@media (max-width: 1100px) {
+  .fx-hero-head {
+    flex-direction: column;
+  }
+  .fx-grid2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .fx-main {
+    padding: 20px 16px 40px;
+  }
+  .fx-pipe {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 18px;
+  }
+  .fx-node::before,
+  .fx-node::after {
+    display: none;
+  }
+  .fx-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
