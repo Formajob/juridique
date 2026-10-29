@@ -70,6 +70,7 @@ export function createDemoCases(): Case[] {
       etape: c.etape,
       statut: c.statut,
       reception: c.reception,
+      notifie: false,
       creePar: c.agentId,
       juristeId: c.juristeId,
       echeance: c.echeance,
