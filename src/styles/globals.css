@@ -866,6 +866,14 @@
   -webkit-background-clip: text;
 }
 
+/* Trame technique pour FlowBanner */
+.flow-banner-grid {
+  background: linear-gradient(90deg, #e4e8f1 1px, transparent 1px),
+              linear-gradient(#e4e8f1 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0.3;
+}
+
 .flow-aurora {
   position: absolute;
   border-radius: 50%;

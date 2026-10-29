@@ -8,7 +8,8 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import { setWorkflowState, getWorkflowState, subscribeWorkflow } from '@/lib/workflow-store';
 import { FlowLogo, FlowTag } from '@/components/brand/FlowBrand';
 import { getMenu, type Role } from '@/lib/menu';
 
@@ -47,6 +48,9 @@ export default function Sidebar({ role, userName = role.charAt(0).toUpperCase() 
   const search = searchParams?.toString() || '';
   const menu = getMenu(role);
 
+  // Read from workflow store
+  const snap = useSyncExternalStore(subscribeWorkflow, getWorkflowState, getWorkflowState);
+
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const item of menu.items) {
@@ -56,6 +60,11 @@ export default function Sidebar({ role, userName = role.charAt(0).toUpperCase() 
     }
     return initial;
   });
+
+  // Compute unread counts per step for Dossiers submenu
+  const getUnreadCount = (step: string): number => {
+    return snap.cases.filter((c) => c.etape === step && !c.notifie).length;
+  };
 
   useEffect(() => {
     setOpenGroups((prev) => {
@@ -89,6 +98,39 @@ export default function Sidebar({ role, userName = role.charAt(0).toUpperCase() 
             );
           }
 
+          // Dossiers menu with notifications
+          if (item.id === 'dossiers') {
+            return (
+              <div key={item.id}>
+                <button
+                  type="button"
+                  className="nav parent"
+                  aria-expanded={open}
+                  onClick={() => setOpenGroups((prev) => ({ ...prev, [item.id]: !open }))}
+                >
+                  {item.label}
+                  <span className="caret">{open ? '▾' : '▸'}</span>
+                </button>
+                {open && (
+                  <div className="kids">
+                    {item.subitems!.map((sub) => {
+                      // Extract etape from href query: /admin/dossiers?etape=constatation_recue
+                      const params = new URLSearchParams(sub.href.split('?')[1] || '');
+                      const step = params.get('etape') || '';
+                      const active = hrefMatches(pathname, search, sub.href);
+                      return (
+                        <Link key={sub.id} href={sub.href} className={active ? 'child on' : 'child'} aria-current={active ? 'page' : undefined}>
+                          {sub.label}
+                          {getUnreadCount(step) > 0 && <span className="badge">{getUnreadCount(step)}</span>}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <div key={item.id}>
               <button
@@ -107,7 +149,7 @@ export default function Sidebar({ role, userName = role.charAt(0).toUpperCase() 
                     return (
                       <Link key={sub.id} href={sub.href} className={active ? 'child on' : 'child'} aria-current={active ? 'page' : undefined}>
                         {sub.label}
-                      </Link>
+                      </Link >
                     );
                   })}
                 </div>
@@ -164,6 +206,20 @@ const CSS = `
   text-decoration: none;
   cursor: pointer;
   font: inherit;
+}
+.jx-side .badge {
+  display: inline-block;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: #f3c3be;
+  color: #b42318;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
 }
 .jx-side .nav { padding: 9px 12px; font-weight: 700; font-size: 14px; }
 .jx-side .child { padding: 7px 12px 7px 28px; font-size: 13px; font-weight: 650; color: #aeb9d2; }

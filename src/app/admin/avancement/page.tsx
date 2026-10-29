@@ -40,6 +40,8 @@ const STEP_META: StepMeta[] = [
   { id: 'cloture', x: 342, y: 1216, label: 'Clos', onglet: 'Clos', echeance: 'Aucune branche ouverte', next: [] },
 ];
 
+const FIXED_DATE = new Date().getTimezoneOffset() === 0 ? new Date(2025, 11, 1) : new Date(new Date().setDate(new Date().getDate()));
+
 export default function AvancementPage() {
   const snap = useSyncExternalStore(subscribeWorkflow, getWorkflowState, getWorkflowState);
   const base = (usePathname() || '').startsWith('/juriste') ? '/juriste' : '/admin';

@@ -142,7 +142,7 @@ export default function AdminDashboardPage(_props?: {
         </div>
       </div>
 
-      <p className="proof">
+      <p className="proof" suppressHydrationWarning>
         <b>{clos} clos + {enCours} en cours = {total}.</b> {lateCount === 0 ? 'Aucun retard.' : lateCount === 1 ? `Le retard est compris dans les ${enCours}.` : `Les ${lateCount} retards sont compris dans les ${enCours}.`} Un retard ne change pas l'étape.
       </p>
 

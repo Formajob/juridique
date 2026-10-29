@@ -15,6 +15,7 @@ import { createDemoTodayPointage } from '@/lib/demo-pointage';
 import { getWorkflowState, subscribeWorkflow } from '@/lib/workflow-store';
 import { ETAPE_LABELS } from '@/lib/workflow-ui';
 import { BRANCHES } from '@/lib/workflow-branch';
+import { FlowBanner, FlowName } from '@/components/brand/FlowBrand';
 
 const MOIS_C = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
 const BUREAU = ['Juriste 1', 'Juriste 2', 'Assistant 1', 'Assistant 2', 'Assistant 3'];
@@ -130,17 +131,36 @@ export default function AdminDashboardPage(_props?: {
   return (
     <div className="jx-dash">
       <style>{CSS}</style>
-      <div className="top">
-        <div>
-          <div className="kicker">Xceed · Juridique</div>
-          <h1>Tableau de bord</h1>
-          <p className="sub">Vue d'ensemble du traitement. Les chiffres viennent des dossiers. L'assistant ne voit pas cette page : elle révèle l'étape, pas le motif.</p>
+      
+      {/* En-tête style Flow avec halo aurora et trame technique */}
+      <FlowBanner 
+        title={<FlowName />} 
+        chip="Espace Juridique"
+        subtitle={`Tableau de bord — ${longDate}`}
+      >
+        <div className="top">
+          <div>
+            <div className="kicker">Xceed · Juridique</div>
+            <h1>Tableau de bord</h1>
+            <p className="sub">Vue d'ensemble du traitement. Les chiffres viennent des dossiers. L'assistant ne voit pas cette page : elle révèle l'étape, pas le motif.</p>
+          </div>
+          <div className="meta">
+            <span className="badge">Démo · lus dans les dossiers</span>
+            <div>{longDate}</div>
+          </div>
         </div>
-        <div className="meta">
-          <span className="badge">Démo · lus dans les dossiers</span>
-          <div>{longDate}</div>
-        </div>
-      </div>
+      </FlowBanner>
+
+      {/* Trame technique d'arrière-plan (style Flow) */}
+      <div 
+        className="flow-banner-grid"
+        style={{
+          backgroundImage: 'linear-gradient(90deg, #e4e8f1 1px, transparent 1px), linear-gradient(#e4e8f1 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+          opacity: 0.3
+        }}
+      />
+
 
       <p className="proof">
         <b>{clos} clos + {enCours} en cours = {total}.</b> {lateCount === 0 ? 'Aucun retard.' : lateCount === 1 ? `Le retard est compris dans les ${enCours}.` : `Les ${lateCount} retards sont compris dans les ${enCours}.`} Un retard ne change pas l'étape.
@@ -361,6 +381,15 @@ const CSS = `
 .jx-dash .who { font-size: 13px; font-weight: 800; color: #0b1330; }
 .jx-dash .tag { display: inline-block; margin-top: 8px; padding: 3px 8px; border-radius: 99px; font-size: 11px; font-weight: 800; }
 .jx-dash .time { margin-top: 6px; font-size: 12px; color: #62708a; }
+
+/* Trame Flow pour le badge */
+.flow-banner-grid {
+  background: linear-gradient(90deg, #e4e8f1 1px, transparent 1px),
+              linear-gradient(#e4e8f1 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0.3;
+}
+
 @media (max-width: 1100px) {
   .jx-dash .kpis, .jx-dash .grid, .jx-dash .people { grid-template-columns: 1fr 1fr; }
   .jx-dash .top { flex-direction: column; align-items: start; }

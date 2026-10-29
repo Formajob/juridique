@@ -113,6 +113,7 @@ export function transitionCase(ref: string, toStep: string, action: string, orig
     etape: toStep,
     statut: toStep === 'cloture' ? 'Clos' : c.statut,
     echeance: echeance === undefined ? c.echeance : echeance,
+    notifie: c.notifie,
   };
   const newCases = [...s.cases];
   newCases[idx] = updated;
@@ -169,6 +170,7 @@ export function createCase(input: Partial<Case> & { reference?: string }): Case 
     etape,
     statut: input.statut || (etape === 'cloture' ? 'Clos' : 'En cours'),
     reception: input.reception ?? false,
+    notifie: false,
     creePar: input.creePar || 'Saisie',
     juristeId: input.juristeId ?? null,
     echeance,
@@ -193,6 +195,19 @@ export function createCase(input: Partial<Case> & { reference?: string }): Case 
   });
 
   return newCase;
+}
+
+export function markAsRead(ref: string) {
+  const s = getWorkflowState();
+  const caseIdx = s.cases.findIndex((c) => c.reference === ref);
+  if (caseIdx < 0) return;
+  const updated = {
+    ...s.cases[caseIdx],
+    notifie: true,
+  };
+  const newCases = [...s.cases];
+  newCases[caseIdx] = updated;
+  setWorkflowState({ ...s, cases: newCases });
 }
 export function noteDocument(ref: string, action: string) {
   const s = getWorkflowState();

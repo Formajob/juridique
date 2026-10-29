@@ -89,6 +89,7 @@ export interface Case {
   etape: string;
   statut: string;
   reception: boolean;
+  notifie: boolean;
   creePar: string;
   juristeId: string | null;
   juriste?: Person;

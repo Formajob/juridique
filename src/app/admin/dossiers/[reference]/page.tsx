@@ -2,9 +2,9 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { useSyncExternalStore } from 'react';
+import { useSyncExternalStore, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { getWorkflowState, subscribeWorkflow, transitionCase } from '@/lib/workflow-store';
+import { getWorkflowState, subscribeWorkflow, transitionCase, markAsRead } from '@/lib/workflow-store';
 import { BRANCHES } from '@/lib/workflow-branch';
 import { ETAPE_LABELS } from '@/lib/workflow-ui';
 import { formatDateFr } from '@/lib/format';
@@ -23,6 +23,12 @@ export default function AdminDossierDetailPage() {
   const reference = params?.reference as string;
   const snap = useSyncExternalStore(subscribeWorkflow, getWorkflowState, getWorkflowState);
   const dossier = snap.cases.find((c) => c.reference === reference);
+
+  useEffect(() => {
+    if (dossier) {
+      markAsRead(reference);
+    }
+  }, [dossier?.reference]);
 
   if (!dossier) {
     notFound();
