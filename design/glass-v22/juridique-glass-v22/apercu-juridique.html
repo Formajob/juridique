@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#eaf1ff">
+<title>Tableau de bord · Juridique — référence Glassy V22</title>
+<link rel="stylesheet" href="glass.css">
+<style>
+  /* Petits ajouts propres à la page de référence, rien de structurel. */
+  .demo-note{display:flex;align-items:center;gap:8px;color:var(--g-muted-2);font-size:10.5px}
+  .demo-note b{color:var(--g-muted)}
+  .split-process{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:13px}
+  @media(max-width:1100px){.split-process{grid-template-columns:1fr}}
+  .branch{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .branch .g-chip{height:32px;background:var(--g-glass-3)}
+  .hero-num{font-size:15px;font-weight:800;letter-spacing:-.02em}
+  .hero-num.red{color:var(--g-bad)}
+</style>
+</head>
+<body class="g-body">
+<div class="g-aurora" aria-hidden="true">
+  <span class="g-orb g-orb--1"></span>
+  <span class="g-orb g-orb--2"></span>
+  <div class="g-grid"></div>
+</div>
+
+<div class="g-app">
+  <!-- ===================== Colonne ===================== -->
+  <aside class="g-side g-glass" id="side">
+    <div class="g-brand">
+      <span class="g-brand-mark">ACX<span>Flow</span></span>
+      <button class="g-icon-btn g-nav-toggle" type="button" id="navToggle" aria-label="Menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+    <a class="g-by" href="https://acx.ma/" target="_blank" rel="noopener">By ACX Maroc</a>
+    <div class="g-space"><i></i> Espace Juridique · Xceed</div>
+
+    <nav class="g-nav" aria-label="Navigation principale">
+      <a class="g-nav-item is-active" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg>
+        Tableau de bord
+      </a>
+
+      <div class="g-nav-group is-open">
+        <button type="button" data-group>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4z"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+          Dossiers <span class="g-nav-count">32</span>
+          <span class="g-chev">›</span>
+        </button>
+        <div class="g-nav-sub">
+          <a href="#">Constatations <span class="g-nav-count">12</span></a>
+          <a href="#">Analyse <span class="g-nav-count">8</span></a>
+          <a href="#">Convocations <span class="g-nav-count">5</span></a>
+          <a href="#">Séances <span class="g-nav-count">4</span></a>
+          <a href="#">Décisions <span class="g-nav-count">3</span></a>
+          <a href="#">Échéances <span class="g-nav-count">6</span></a>
+          <a href="#">Clos <span class="g-nav-count">41</span></a>
+        </div>
+      </div>
+
+      <div class="g-nav-group">
+        <button type="button" data-group>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          Présence <span class="g-chev">›</span>
+        </button>
+        <div class="g-nav-sub">
+          <a href="#">Temps réel</a>
+          <a href="#">Historique</a>
+          <a href="#">Gestion</a>
+          <a href="#">Rapport</a>
+        </div>
+      </div>
+
+      <a class="g-nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+        Calendrier
+      </a>
+      <a class="g-nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+        Recherche
+      </a>
+    </nav>
+
+    <div class="g-who">
+      <div class="g-session">
+        <span class="g-avatar">JA</span>
+        <span class="g-session-meta"><b>Jawad</b><span>Responsable département</span></span>
+        <button class="g-icon-btn" type="button" title="Quitter" style="width:32px;height:32px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/></svg>
+        </button>
+      </div>
+      <div class="g-side-foot">Espace Juridique · démonstration<br>Données fictives préfixées DEMO</div>
+    </div>
+  </aside>
+
+  <!-- ===================== Principal ===================== -->
+  <main class="g-main">
+    <header class="g-top g-rise" style="--d:.02s">
+      <div>
+        <div class="g-kicker"><i></i> Espace Juridique · Xceed</div>
+        <h1>Tableau de bord</h1>
+        <p class="g-lead">Suivi des dossiers, des échéances et de la présence. L’outil note les passages, il ne qualifie pas la faute.</p>
+      </div>
+      <div class="g-tools">
+        <label class="g-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+          <input type="search" placeholder="Référence DEMO…" aria-label="Rechercher un dossier">
+        </label>
+        <span class="g-date" id="todayChip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+          7 oct. 2026
+        </span>
+        <button class="g-icon-btn" type="button" id="themeBtn" title="Thème clair ou sombre" aria-label="Changer de thème">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M21 13.2A8.5 8.5 0 1 1 10.8 3a6.6 6.6 0 0 0 10.2 10.2z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Bandeau échéance -->
+    <section class="g-hero g-glass g-rise" style="--d:.06s">
+      <div>
+        <div class="g-kicker"><i></i> Prochaine échéance</div>
+        <h2>DEMO-2026-014 · <em>analyse de gravité</em></h2>
+        <p>Reçue le 1<sup>er</sup> octobre. Les huit jours se terminent le 9 octobre. Le juriste choisit la branche : faute non grave, ou faute grave.</p>
+        <div class="g-hero-actions">
+          <a class="g-btn" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+            Ouvrir le dossier
+          </a>
+          <a class="g-btn g-btn--ghost" href="#dossiers">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            Voir les échéances
+          </a>
+        </div>
+      </div>
+      <div class="g-hero-side">
+        <b class="g-num">2</b>
+        <span>jours restants</span>
+        <small>9 octobre 2026</small>
+      </div>
+    </section>
+
+    <!-- Indicateurs -->
+    <section class="g-kpis" aria-label="Indicateurs">
+      <article class="g-kpi g-glass g-rise" style="--d:.1s">
+        <div class="g-kpi-top">
+          <span class="g-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 5h16v14H4z"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span>
+          <span class="g-delta is-info">32 ouverts</span>
+        </div>
+        <b class="g-value g-num" data-count="32">0</b>
+        <span class="g-label">Dossiers en cours</span>
+        <svg class="g-spark" viewBox="0 0 200 30" preserveAspectRatio="none" aria-hidden="true">
+          <defs><linearGradient id="g-spark" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient></defs>
+          <polyline points="0,24 25,22 50,20 75,21 100,16 125,15 150,11 175,12 200,7"/>
+        </svg>
+      </article>
+
+      <article class="g-kpi g-glass g-rise" style="--d:.13s">
+        <div class="g-kpi-top">
+          <span class="g-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span>
+          <span class="g-delta is-ok">délai tenu</span>
+        </div>
+        <b class="g-value g-num" data-count="21">0</b>
+        <span class="g-label">Dans le délai</span>
+        <svg class="g-spark" viewBox="0 0 200 30" preserveAspectRatio="none" aria-hidden="true"><polyline points="0,22 25,23 50,19 75,18 100,15 125,17 150,13 175,12 200,10"/></svg>
+      </article>
+
+      <article class="g-kpi g-glass g-rise" style="--d:.16s">
+        <div class="g-kpi-top">
+          <span class="g-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3 2 21h20L12 3z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg></span>
+          <span class="g-delta is-bad">à traiter</span>
+        </div>
+        <b class="g-value g-num" data-count="5" style="color:var(--g-bad)">0</b>
+        <span class="g-label">En retard</span>
+        <svg class="g-spark" viewBox="0 0 200 30" preserveAspectRatio="none" aria-hidden="true"><polyline points="0,25 25,18 50,24 75,16 100,20 125,12 150,17 175,9 200,13"/></svg>
+      </article>
+
+      <article class="g-kpi g-glass g-rise" style="--d:.19s">
+        <div class="g-kpi-top">
+          <span class="g-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="g-delta">ce mois</span>
+        </div>
+        <b class="g-value g-num" data-count="41">0</b>
+        <span class="g-label">Dossiers clos</span>
+        <svg class="g-spark" viewBox="0 0 200 30" preserveAspectRatio="none" aria-hidden="true"><polyline points="0,26 25,25 50,24 75,21 100,22 125,18 150,16 175,14 200,11"/></svg>
+      </article>
+    </section>
+
+    <!-- Avancement + répartition -->
+    <section class="g-grid-2">
+      <article class="g-card g-glass g-rise" style="--d:.22s">
+        <div class="g-card-head">
+          <div>
+            <h3 class="g-card-title">Avancement par étape</h3>
+            <p class="g-card-sub">Nombre de dossiers présents à chaque étape. Ce n’est pas un classement des personnes.</p>
+          </div>
+          <div class="g-tabs" role="tablist" aria-label="Périmètre">
+            <button class="g-tab is-active" role="tab" aria-selected="true">Tous</button>
+            <button class="g-tab" role="tab" aria-selected="false">Admin</button>
+            <button class="g-tab" role="tab" aria-selected="false">Juriste</button>
+          </div>
+        </div>
+        <div class="g-bars" id="stageBars">
+          <div class="g-bar">
+            <span class="g-bar-label"><i style="background:#3b82f6;color:#3b82f6"></i>Constatations</span>
+            <div class="g-track"><span class="g-fill" style="--g-bar-c:#3b82f6" data-w="29"></span></div>
+            <span class="g-bar-val"><b class="g-num">12</b>dossiers</span>
+          </div>
+          <div class="g-bar">
+            <span class="g-bar-label"><i style="background:#0ea5e9;color:#0ea5e9"></i>Analyse</span>
+            <div class="g-track"><span class="g-fill" style="--g-bar-c:#0ea5e9" data-w="19"></span></div>
+            <span class="g-bar-val"><b class="g-num">8</b>dossiers</span>
+          </div>
+          <div class="g-bar">
+            <span class="g-bar-label"><i style="background:#22d3ee;color:#22d3ee"></i>Convocations</span>
+            <div class="g-track"><span class="g-fill" style="--g-bar-c:#22d3ee" data-w="12"></span></div>
+            <span class="g-bar-val"><b class="g-num">5</b>dossiers</span>
+          </div>
+          <div class="g-bar">
+            <span class="g-bar-label"><i style="background:#8b5cf6;color:#8b5cf6"></i>Séances</span>
+            <div class="g-track"><span class="g-fill" style="--g-bar-c:#8b5cf6" data-w="10"></span></div>
+            <span class="g-bar-val"><b class="g-num">4</b>dossiers</span>
+          </div>
+          <div class="g-bar">
+            <span class="g-bar-label"><i style="background:#a855f7;color:#a855f7"></i>Décisions</span>
+            <div class="g-track"><span class="g-fill" style="--g-bar-c:#a855f7" data-w="7"></span></div>
+            <span class="g-bar-val"><b class="g-num">3</b>dossiers</span>
+          </div>
+          <div class="g-bar">
+            <span class="g-bar-label"><i style="background:#64748b;color:#64748b"></i>Clos</span>
+            <div class="g-track"><span class="g-fill" style="--g-bar-c:#64748b" data-w="100"></span></div>
+            <span class="g-bar-val"><b class="g-num">41</b>dossiers</span>
+          </div>
+        </div>
+        <div class="g-card-foot">
+          <span>Total <b class="g-num">73</b> dossiers</span>
+          <span>Échéances ouvertes <b class="g-num">6</b></span>
+        </div>
+      </article>
+
+      <article class="g-card g-glass g-rise" style="--d:.25s">
+        <div class="g-card-head">
+          <div>
+            <h3 class="g-card-title">Répartition</h3>
+            <p class="g-card-sub">État des dossiers ouverts et clos.</p>
+          </div>
+        </div>
+        <div class="g-donut-block">
+          <div style="position:relative;display:grid;place-items:center">
+            <div class="g-donut" style="--g-segments:conic-gradient(#64748b 0 56%,#3b82f6 56% 85%,#e11d48 85% 92%,#e2e8f0 92% 100%)" role="img" aria-label="Clos 56 %, dans le délai 29 %, en retard 7 %, en attente 8 %"></div>
+            <div class="g-donut-mid"><b class="g-num">73</b><span>dossiers</span></div>
+          </div>
+          <div class="g-legend">
+            <div class="g-legend-row"><i style="background:#64748b;color:#64748b"></i><span>Clos</span><b class="g-num">41</b></div>
+            <div class="g-legend-row"><i style="background:#3b82f6;color:#3b82f6"></i><span>Dans le délai</span><b class="g-num">21</b></div>
+            <div class="g-legend-row"><i style="background:#e11d48;color:#e11d48"></i><span>En retard</span><b class="g-num">5</b></div>
+            <div class="g-legend-row"><i style="background:#cbd5e1;color:#cbd5e1"></i><span>En attente</span><b class="g-num">6</b></div>
+          </div>
+        </div>
+        <div class="g-card-foot">
+          <span>Mis à jour à <b>09:12</b></span>
+          <span>Source <b>dossiers</b></span>
+        </div>
+      </article>
+    </section>
+
+    <!-- Échéances + process -->
+    <section class="split-process">
+      <article class="g-card g-glass g-rise" style="--d:.28s" id="dossiers">
+        <div class="g-card-head">
+          <div>
+            <h3 class="g-card-title">Échéances à venir</h3>
+            <p class="g-card-sub">Trois prochaines. Le retard se voit, l’étape ne change pas toute seule.</p>
+          </div>
+          <a class="g-btn g-btn--ghost g-btn--sm" href="#">Tout voir</a>
+        </div>
+        <ul class="g-list">
+          <li class="g-list-item">
+            <span class="g-list-main"><b>DEMO-2026-014</b><span>Analyse · reçue le 1<sup>er</sup> oct.</span></span>
+            <span class="g-list-side"><time>9 oct.</time><span class="g-badge is-warn">2 jours</span></span>
+          </li>
+          <li class="g-list-item">
+            <span class="g-list-main"><b>DEMO-2026-009</b><span>Convocation · séance à fixer</span></span>
+            <span class="g-list-side"><time>11 oct.</time><span class="g-badge is-ok">Dans le délai</span></span>
+          </li>
+          <li class="g-list-item">
+            <span class="g-list-main"><b>DEMO-2026-021</b><span>Notification · 48 heures</span></span>
+            <span class="g-list-side"><time>8 oct.</time><span class="g-badge is-bad">En retard</span></span>
+          </li>
+          <li class="g-list-item">
+            <span class="g-list-main"><b>DEMO-2026-029</b><span>Dépôt inspection · à noter</span></span>
+            <span class="g-list-side"><time>14 oct.</time><span class="g-badge is-info">À venir</span></span>
+          </li>
+        </ul>
+        <div class="g-card-foot">
+          <span><b>6</b> échéances ouvertes</span>
+          <span><b>5</b> dans le délai · <b>1</b> en retard</span>
+        </div>
+      </article>
+
+      <article class="g-card g-glass g-rise" style="--d:.31s">
+        <div class="g-card-head">
+          <div>
+            <h3 class="g-card-title">Process du dossier</h3>
+            <p class="g-card-sub">DEMO-2026-014 · uniquement la branche permise.</p>
+          </div>
+          <span class="g-badge is-info">Analyse</span>
+        </div>
+        <ol class="g-steps">
+          <li class="g-step is-done">
+            <span class="g-step-dot">✓</span>
+            <span class="g-step-body"><b>Constatation reçue</b><span>Constatations · 1<sup>er</sup> oct.</span></span>
+            <span class="g-step-meta">fait</span>
+          </li>
+          <li class="g-step is-now">
+            <span class="g-step-dot">2</span>
+            <span class="g-step-body"><b>Analyse de gravité</b><span>Échéance 9 oct. · juriste</span></span>
+            <span class="g-step-meta">en cours</span>
+          </li>
+          <li class="g-step is-next">
+            <span class="g-step-dot">3</span>
+            <span class="g-step-body"><b>Branche à choisir</b><span>Faute non grave, ou faute grave</span></span>
+            <span class="g-step-meta">à venir</span>
+          </li>
+          <li class="g-step is-next">
+            <span class="g-step-dot">4</span>
+            <span class="g-step-body"><b>Clôture ou convocation</b><span>La suite dépend du choix</span></span>
+            <span class="g-step-meta">à venir</span>
+          </li>
+        </ol>
+        <div class="branch">
+          <span class="g-chip">Faute non grave</span>
+          <span class="g-chip">Faute grave</span>
+        </div>
+        <div class="g-card-foot">
+          <span>Trace des passages conservée</span>
+          <span>Pas de motif affiché</span>
+        </div>
+      </article>
+    </section>
+
+    <!-- Dossiers récents -->
+    <section class="g-card g-glass g-rise" style="--d:.34s">
+      <div class="g-card-head">
+        <div>
+          <h3 class="g-card-title">Dossiers récents</h3>
+          <p class="g-card-sub">Référence, activité, étape et échéance. Ni motif, ni gravité, ni sanction dans la liste.</p>
+        </div>
+        <div class="g-tabs" role="tablist" aria-label="Filtre">
+          <button class="g-tab is-active" role="tab" aria-selected="true">Ouverts</button>
+          <button class="g-tab" role="tab" aria-selected="false">En retard</button>
+          <button class="g-tab" role="tab" aria-selected="false">Clos</button>
+        </div>
+      </div>
+      <div class="g-table-wrap">
+        <table class="g-table">
+          <thead>
+            <tr>
+              <th>Référence</th>
+              <th>Activité</th>
+              <th>Étape</th>
+              <th>Échéance</th>
+              <th class="g-right">Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="g-ref">DEMO-2026-014</span><span class="g-sub-line">Reçue le 1<sup>er</sup> oct.</span></td>
+              <td>Atelier</td>
+              <td>Analyse de gravité</td>
+              <td class="g-num">9 oct.</td>
+              <td class="g-right"><span class="g-badge is-warn"><i class="g-dot"></i>2 jours</span></td>
+            </tr>
+            <tr>
+              <td><span class="g-ref">DEMO-2026-021</span><span class="g-sub-line">Notification 48 h</span></td>
+              <td>Dépôt</td>
+              <td>Notification</td>
+              <td class="g-num">8 oct.</td>
+              <td class="g-right"><span class="g-badge is-bad"><i class="g-dot"></i>En retard</span></td>
+            </tr>
+            <tr>
+              <td><span class="g-ref">DEMO-2026-009</span><span class="g-sub-line">Convocation émise</span></td>
+              <td>Bureau</td>
+              <td>Convocation</td>
+              <td class="g-num">11 oct.</td>
+              <td class="g-right"><span class="g-badge is-ok"><i class="g-dot"></i>Dans le délai</span></td>
+            </tr>
+            <tr>
+              <td><span class="g-ref">DEMO-2026-029</span><span class="g-sub-line">Absence en séance</span></td>
+              <td>Entrepôt</td>
+              <td>Dépôt inspection</td>
+              <td class="g-num">14 oct.</td>
+              <td class="g-right"><span class="g-badge is-info"><i class="g-dot"></i>À venir</span></td>
+            </tr>
+            <tr>
+              <td><span class="g-ref">DEMO-2026-004</span><span class="g-sub-line">Clôturée le 3 oct.</span></td>
+              <td>Atelier</td>
+              <td>Clôture</td>
+              <td class="g-muted">—</td>
+              <td class="g-right"><span class="g-badge is-muted"><i class="g-dot"></i>Clos</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="g-card-foot">
+        <span>5 dossiers affichés sur <b class="g-num">32</b></span>
+        <span>Le clic ouvre la fiche et ses boutons autorisés</span>
+      </div>
+    </section>
+
+    <footer class="g-foot">
+      <span class="demo-note"><b>Référence de style</b> · données fictives préfixées DEMO · aucun envoi, aucun fichier stocké.</span>
+      <span class="g-tag">Glassy V22</span>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* Thème : clair par défaut, sombre au clic, mémorisé. */
+  var root = document.documentElement;
+  try {
+    var saved = localStorage.getItem("juridique-glass-theme");
+    if (saved) root.setAttribute("data-theme", saved);
+  } catch (e) {}
+
+  var btn = document.getElementById("themeBtn");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("juridique-glass-theme", next); } catch (e) {}
+  });
+
+  /* Date du jour. */
+  var chip = document.getElementById("todayChip");
+  if (chip) {
+    var d = new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(new Date());
+    chip.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>' + d;
+  }
+
+  /* Compteurs. */
+  function countUp(el){ 
+    var to = Number(el.getAttribute("data-count")) || 0;
+    var t0 = performance.now();
+    function frame(t){
+      var k = Math.min(1,(t-t0)/850);
+      var e = 1 - Math.pow(1-k,3);
+      el.textContent = Math.round(to*e);
+      if(k<1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  document.querySelectorAll("[data-count]").forEach(countUp);
+
+  /* Barres. */
+  requestAnimationFrame(function(){
+    setTimeout(function(){
+      document.querySelectorAll(".g-fill").forEach(function(f){ f.style.width = f.getAttribute("data-w") + "%"; });
+    }, 220);
+  });
+
+  /* Menu Campagne / Dossiers. */
+  document.querySelectorAll("[data-group]").forEach(function(b){
+    b.addEventListener("click", function(){ b.parentElement.classList.toggle("is-open"); });
+  });
+
+  /* Menu mobile. */
+  var side = document.getElementById("side");
+  var toggle = document.getElementById("navToggle");
+  function closeNav(){ if(!side) return; side.classList.remove("is-open"); if(toggle) toggle.setAttribute("aria-expanded","false"); }
+  if (toggle) toggle.addEventListener("click", function(ev){
+    ev.stopPropagation();
+    side.classList.toggle("is-open");
+    toggle.setAttribute("aria-expanded", side.classList.contains("is-open") ? "true" : "false");
+  });
+  document.addEventListener("keydown", function(ev){ if(ev.key === "Escape") closeNav(); });
+  document.addEventListener("click", function(ev){
+    if(!side || !side.classList.contains("is-open")) return;
+    if(side.contains(ev.target)) return;
+    closeNav();
+  });
+  window.addEventListener("resize", function(){ if(window.innerWidth > 860) closeNav(); });
+})();
+</script>
+</body>
+</html>

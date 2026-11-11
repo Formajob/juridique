@@ -19,25 +19,25 @@ interface StepMeta { id: string; x: number; y: number; label: string; onglet: st
 interface Arrow { from: string; d: string; join?: boolean; }
 interface LabelItem { from: string; text: string; x: number; y: number; }
 
-const W = 136, H = 56, BUS = 1188;
+const W = 200, H = 82, BUS = 1500;
 
 const STEP_META: StepMeta[] = [
-  { id: 'constatation_recue', x: 342, y: 8, label: 'Constatation reçue', onglet: 'Constatations', echeance: '8 jours pour lancer l’analyse', next: [{ id: 'analyse_gravite', label: 'Lancer l’analyse' }] },
-  { id: 'analyse_gravite', x: 342, y: 112, label: 'Analyse', onglet: 'Analyse', echeance: '8 jours après la réception', next: [{ id: 'convocation_seance', label: 'Faute grave' }, { id: 'sanction_faute_non_grave', label: 'Faute non grave' }] },
-  { id: 'sanction_faute_non_grave', x: 24, y: 248, label: 'Sanction directe', onglet: 'Décisions', echeance: 'Pas de séance. Pas d’inspection.', next: [{ id: 'cloture', label: 'Clore' }] },
-  { id: 'convocation_seance', x: 342, y: 248, label: 'Convocation', onglet: 'Convocations', echeance: '8 jours · présence non notée', next: [{ id: 'seance_presente', label: 'Présent' }, { id: 'seance_absente', label: 'Absent' }] },
-  { id: 'seance_presente', x: 180, y: 400, label: 'Séance présente', onglet: 'Séances', echeance: 'Le papier reste dehors', next: [{ id: 'pv_seance', label: 'PV remis' }] },
-  { id: 'pv_seance', x: 180, y: 528, label: 'PV de séance', onglet: 'Séances', echeance: 'Choix non saisi', next: [{ id: 'decision_licenciement', label: 'Licenciement' }, { id: 'decision_mise_a_pied', label: 'Mise à pied' }, { id: 'decision_sanction', label: 'Sanction' }, { id: 'fin_procedure', label: 'Absence du fait' }] },
-  { id: 'seance_absente', x: 520, y: 400, label: 'Agent absent', onglet: 'Séances', echeance: 'Dépôt non saisi', next: [{ id: 'depot_inspection_absence', label: 'Déposer à l’inspection' }] },
-  { id: 'depot_inspection_absence', x: 520, y: 528, label: 'Dépôt inspection', onglet: 'Décisions', echeance: 'Branche absence', next: [{ id: 'investigations', label: 'Ouvrir les investigations' }] },
-  { id: 'investigations', x: 520, y: 656, label: 'Investigations', onglet: 'Décisions', echeance: 'L’outil note l’ouverture. Il n’enquête pas.', next: [{ id: 'decision_licenciement', label: 'Licenciement' }, { id: 'decision_mise_a_pied', label: 'Mise à pied' }, { id: 'decision_sanction', label: 'Sanction' }, { id: 'fin_procedure', label: 'Absence du fait' }] },
-  { id: 'decision_licenciement', x: 180, y: 820, label: 'Licenciement', onglet: 'Décisions', echeance: 'Puis les 48 heures', next: [{ id: 'notification_48h', label: 'Rappel des 48 heures' }] },
-  { id: 'decision_mise_a_pied', x: 340, y: 820, label: 'Mise à pied', onglet: 'Décisions', echeance: 'Puis les 48 heures', next: [{ id: 'notification_48h', label: 'Rappel des 48 heures' }] },
-  { id: 'decision_sanction', x: 500, y: 820, label: 'Sanction', onglet: 'Décisions', echeance: 'Pas d’inspection', next: [{ id: 'cloture', label: 'Clore' }] },
-  { id: 'fin_procedure', x: 660, y: 820, label: 'Absence du fait', onglet: 'Décisions', echeance: 'Pas d’inspection', next: [{ id: 'cloture', label: 'Clore' }] },
-  { id: 'notification_48h', x: 230, y: 960, label: 'Rappel 48 h', onglet: 'Décisions', echeance: '48 heures. Visible aussi dans Échéances.', next: [{ id: 'depot_inspection_decision', label: 'Dépôt à l’inspection' }] },
-  { id: 'depot_inspection_decision', x: 230, y: 1088, label: 'Dépôt inspection', onglet: 'Décisions', echeance: 'Après les 48 heures', next: [{ id: 'cloture', label: 'Clore' }] },
-  { id: 'cloture', x: 342, y: 1216, label: 'Clos', onglet: 'Clos', echeance: 'Aucune branche ouverte', next: [] },
+  { id: 'constatation_recue', x: 260, y: 16, label: 'Constatation reçue', onglet: 'Constatations', echeance: '8 jours pour lancer l’analyse', next: [{ id: 'analyse_gravite', label: 'Lancer l’analyse' }] },
+  { id: 'analyse_gravite', x: 260, y: 120, label: 'Analyse', onglet: 'Analyse', echeance: '8 jours après la réception', next: [{ id: 'convocation_seance', label: 'Faute grave' }, { id: 'sanction_faute_non_grave', label: 'Faute non grave' }] },
+  { id: 'sanction_faute_non_grave', x: 10, y: 240, label: 'Sanction directe', onglet: 'Décisions', echeance: 'Pas de séance. Pas d’inspection.', next: [{ id: 'cloture', label: 'Clore' }] },
+  { id: 'convocation_seance', x: 260, y: 240, label: 'Convocation', onglet: 'Convocations', echeance: '8 jours · présence non notée', next: [{ id: 'seance_presente', label: 'Présent' }, { id: 'seance_absente', label: 'Absent' }] },
+  { id: 'seance_presente', x: 510, y: 380, label: 'Séance présente', onglet: 'Séances', echeance: 'Le papier reste dehors', next: [{ id: 'pv_seance', label: 'PV remis' }] },
+  { id: 'pv_seance', x: 510, y: 510, label: 'PV de séance', onglet: 'Séances', echeance: 'Choix non saisi', next: [{ id: 'decision_licenciement', label: 'Licenciement' }, { id: 'decision_mise_a_pied', label: 'Mise à pied' }, { id: 'decision_sanction', label: 'Sanction' }, { id: 'fin_procedure', label: 'Absence du fait' }] },
+  { id: 'seance_absente', x: 760, y: 380, label: 'Agent absent', onglet: 'Séances', echeance: 'Dépôt non saisi', next: [{ id: 'depot_inspection_absence', label: 'Déposer à l’inspection' }] },
+  { id: 'depot_inspection_absence', x: 760, y: 510, label: 'Dépôt inspection', onglet: 'Décisions', echeance: 'Branche absence', next: [{ id: 'investigations', label: 'Ouvrir les investigations' }] },
+  { id: 'investigations', x: 760, y: 660, label: 'Investigations', onglet: 'Décisions', echeance: 'L’outil note l’ouverture. Il n’enquête pas.', next: [{ id: 'decision_licenciement', label: 'Licenciement' }, { id: 'decision_mise_a_pied', label: 'Mise à pied' }, { id: 'decision_sanction', label: 'Sanction' }, { id: 'fin_procedure', label: 'Absence du fait' }] },
+  { id: 'decision_licenciement', x: 510, y: 840, label: 'Licenciement', onglet: 'Décisions', echeance: 'Puis les 48 heures', next: [{ id: 'notification_48h', label: 'Rappel des 48 heures' }] },
+  { id: 'decision_mise_a_pied', x: 260, y: 840, label: 'Mise à pied', onglet: 'Décisions', echeance: 'Puis les 48 heures', next: [{ id: 'notification_48h', label: 'Rappel des 48 heures' }] },
+  { id: 'decision_sanction', x: 760, y: 840, label: 'Sanction', onglet: 'Décisions', echeance: 'Pas d’inspection', next: [{ id: 'cloture', label: 'Clore' }] },
+  { id: 'fin_procedure', x: 510, y: 1000, label: 'Absence du fait', onglet: 'Décisions', echeance: 'Pas d’inspection', next: [{ id: 'cloture', label: 'Clore' }] },
+  { id: 'notification_48h', x: 260, y: 990, label: 'Rappel 48 h', onglet: 'Décisions', echeance: '48 heures. Visible aussi dans Échéances.', next: [{ id: 'depot_inspection_decision', label: 'Dépôt à l’inspection' }] },
+  { id: 'depot_inspection_decision', x: 260, y: 1130, label: 'Dépôt inspection', onglet: 'Décisions', echeance: 'Après les 48 heures', next: [{ id: 'cloture', label: 'Clore' }] },
+  { id: 'cloture', x: 260, y: 1290, label: 'Clos', onglet: 'Clos', echeance: 'Aucune branche ouverte', next: [] },
 ];
 
 const FIXED_DATE = new Date().getTimezoneOffset() === 0 ? new Date(2025, 11, 1) : new Date(new Date().setDate(new Date().getDate()));
@@ -69,23 +69,22 @@ export default function AvancementPage() {
   const T = (id: string) => byId[id].y;
   const arrows = [
     { from: 'constatation_recue', d: `M ${CX('constatation_recue')} ${B('constatation_recue')} V ${T('analyse_gravite')}` },
-    { from: 'analyse_gravite', d: `M ${CX('analyse_gravite')} ${B('analyse_gravite')} V 196 H ${CX('sanction_faute_non_grave')} V ${T('sanction_faute_non_grave')}` },
+    { from: 'analyse_gravite', d: `M ${CX('analyse_gravite')} ${B('analyse_gravite')} V 220 H ${CX('sanction_faute_non_grave')} V ${T('sanction_faute_non_grave')}` },
     { from: 'analyse_gravite', d: `M ${CX('analyse_gravite')} ${B('analyse_gravite')} V ${T('convocation_seance')}` },
     { from: 'sanction_faute_non_grave', d: `M ${CX('sanction_faute_non_grave')} ${B('sanction_faute_non_grave')} V ${BUS} H ${CX('cloture')} V ${T('cloture')}` },
-    { from: 'convocation_seance', d: `M ${CX('convocation_seance')} ${B('convocation_seance')} V 352 H ${CX('seance_presente')} V ${T('seance_presente')}` },
-    { from: 'convocation_seance', d: `M ${CX('convocation_seance')} ${B('convocation_seance')} V 352 H ${CX('seance_absente')} V ${T('seance_absente')}` },
+    { from: 'convocation_seance', d: `M ${CX('convocation_seance')} ${B('convocation_seance')} V 350 H ${CX('seance_presente')} V ${T('seance_presente')}` },
+    { from: 'convocation_seance', d: `M ${CX('convocation_seance')} ${B('convocation_seance')} V 350 H ${CX('seance_absente')} V ${T('seance_absente')}` },
     { from: 'seance_presente', d: `M ${CX('seance_presente')} ${B('seance_presente')} V ${T('pv_seance')}` },
     { from: 'seance_absente', d: `M ${CX('seance_absente')} ${B('seance_absente')} V ${T('depot_inspection_absence')}` },
     { from: 'depot_inspection_absence', d: `M ${CX('depot_inspection_absence')} ${B('depot_inspection_absence')} V ${T('investigations')}` },
-    { from: 'pv_seance', d: `M ${CX('pv_seance')} ${B('pv_seance')} V 748 H 488 V 772`, join: true },
-    { from: 'investigations', d: `M ${CX('investigations')} ${B('investigations')} V 748 H 488`, join: true },
-    { from: 'pv investig', d: `M ${CX('decision_licenciement')} 772 V ${T('decision_licenciement')}` },
-    { from: 'pv investig', d: `M ${CX('decision_mise_a_pied')} 772 V ${T('decision_mise_a_pied')}` },
-    { from: 'pv investig', d: `M ${CX('decision_sanction')} 772 V ${T('decision_sanction')}` },
-    { from: 'pv investig', d: `M ${CX('fin_procedure')} 772 V ${T('fin_procedure')}` },
-    { from: 'pv investig', d: `M ${CX('decision_licenciement')} 772 H ${CX('fin_procedure')}`, join: true },
-    { from: 'decision_licenciement', d: `M ${CX('decision_licenciement')} ${B('decision_licenciement')} V 918 H ${CX('notification_48h')} V ${T('notification_48h')}` },
-    { from: 'decision_mise_a_pied', d: `M ${CX('decision_mise_a_pied')} ${B('decision_mise_a_pied')} V 918 H ${CX('notification_48h')} V ${T('notification_48h')}` },
+    { from: 'pv_join', d: `M ${CX('pv_seance')} ${B('pv_seance')} V 790`, join: true },
+    { from: 'investigations', d: `M ${CX('investigations')} ${B('investigations')} V 790 H 610`, join: true },
+    { from: 'pv_join', d: `M 610 790 V ${T('decision_licenciement')}` },
+    { from: 'pv_join', d: `M 610 790 H ${CX('decision_mise_a_pied')} V ${T('decision_mise_a_pied')}` },
+    { from: 'pv_join', d: `M 610 790 H ${CX('decision_sanction')} V ${T('decision_sanction')}` },
+    { from: 'pv_join', d: `M 610 790 V ${T('fin_procedure')}` },
+    { from: 'decision_licenciement', d: `M ${CX('decision_licenciement')} ${B('decision_licenciement')} V 950 H ${CX('notification_48h')} V ${T('notification_48h')}` },
+    { from: 'decision_mise_a_pied', d: `M ${CX('decision_mise_a_pied')} ${B('decision_mise_a_pied')} V ${T('notification_48h')}` },
     { from: 'notification_48h', d: `M ${CX('notification_48h')} ${B('notification_48h')} V ${T('depot_inspection_decision')}` },
     { from: 'depot_inspection_decision', d: `M ${CX('depot_inspection_decision')} ${B('depot_inspection_decision')} V ${BUS} H ${CX('cloture')} V ${T('cloture')}` },
     { from: 'decision_sanction', d: `M ${CX('decision_sanction')} ${B('decision_sanction')} V ${BUS} H ${CX('cloture')} V ${T('cloture')}` },
@@ -93,21 +92,21 @@ export default function AvancementPage() {
   ];
   const labels = [
     { from: 'constatation_recue', text: 'Lancer l’analyse', x: CX('constatation_recue'), y: (B('constatation_recue') + T('analyse_gravite')) / 2 },
-    { from: 'analyse_gravite', text: 'Faute non grave', x: (CX('analyse_gravite') + CX('sanction_faute_non_grave')) / 2, y: 196 },
-    { from: 'analyse_gravite', text: 'Faute grave', x: CX('analyse_gravite'), y: (196 + T('convocation_seance')) / 2 },
-    { from: 'sanction_faute_non_grave', text: 'puis Clos', x: CX('sanction_faute_non_grave'), y: 560 },
-    { from: 'convocation_seance', text: 'Présent', x: CX('seance_presente'), y: (352 + T('seance_presente')) / 2 },
-    { from: 'convocation_seance', text: 'Absent', x: CX('seance_absente'), y: (352 + T('seance_absente')) / 2 },
+    { from: 'analyse_gravite', text: 'Faute non grave', x: (CX('analyse_gravite') + CX('sanction_faute_non_grave')) / 2, y: 221 },
+    { from: 'analyse_gravite', text: 'Faute grave', x: CX('analyse_gravite'), y: (202 + T('convocation_seance')) / 2 },
+    { from: 'sanction_faute_non_grave', text: 'puis Clos', x: CX('sanction_faute_non_grave'), y: 806 },
+    { from: 'convocation_seance', text: 'Présent', x: CX('seance_presente'), y: (322 + T('seance_presente')) / 2 },
+    { from: 'convocation_seance', text: 'Absent', x: CX('seance_absente'), y: (322 + T('seance_absente')) / 2 },
     { from: 'seance_presente', text: 'PV remis', x: CX('seance_presente'), y: (B('seance_presente') + T('pv_seance')) / 2 },
     { from: 'seance_absente', text: 'Dépôt', x: CX('seance_absente'), y: (B('seance_absente') + T('depot_inspection_absence')) / 2 },
     { from: 'depot_inspection_absence', text: 'Investigations', x: CX('depot_inspection_absence'), y: (B('depot_inspection_absence') + T('investigations')) / 2 },
-    { from: 'pv investig', text: 'Même choix', x: 488, y: 772 },
-    { from: 'decision_licenciement', text: '48 h', x: CX('notification_48h'), y: (918 + T('notification_48h')) / 2 },
-    { from: 'decision_mise_a_pied', text: '48 h', x: CX('notification_48h'), y: (918 + T('notification_48h')) / 2 },
+    { from: 'pv_join', text: 'Même choix', x: 610, y: 815 },
+    { from: 'decision_licenciement', text: '48 h', x: 300, y: (922 + T('notification_48h')) / 2 },
+    { from: 'decision_mise_a_pied', text: '48 h', x: 420, y: (922 + T('notification_48h')) / 2 },
     { from: 'notification_48h', text: 'Dépôt', x: CX('notification_48h'), y: (B('notification_48h') + T('depot_inspection_decision')) / 2 },
-    { from: 'depot_inspection_decision', text: 'Clos', x: (CX('depot_inspection_decision') + CX('cloture')) / 2, y: BUS },
-    { from: 'decision_sanction', text: 'Clos', x: CX('decision_sanction'), y: 1040 },
-    { from: 'fin_procedure', text: 'Clos', x: CX('fin_procedure'), y: 1040 },
+    { from: 'depot_inspection_decision', text: 'Clos', x: CX('cloture'), y: BUS },
+    { from: 'decision_sanction', text: 'Clos', x: CX('decision_sanction'), y: 1500 },
+    { from: 'fin_procedure', text: 'Clos', x: CX('fin_procedure'), y: 1500 },
   ];
   const hot = (from: string, id: string | null) => !!id && from.split(' ').includes(id);
   const selectedStep = steps.find(s => s.id === selectedId) || null;
@@ -187,14 +186,16 @@ export default function AvancementPage() {
         .stat b { display: block; font-size: 24px; color: var(--navy); letter-spacing: -.03em; }
         .stat span { font-size: 12px; color: var(--muted); }
         .stat.alert b { color: var(--rouge); }
-        .board { background: #fff; border: 1px solid var(--filet); border-radius: 20px; padding: 14px 12px 18px; overflow: auto; }
+        .board { position: relative; overflow: hidden; background: #fff; border: 1px solid var(--filet); border-radius: 24px; padding: 16px 14px 20px; }
+        .board::before { content: ""; position: absolute; top: -8%; left: -8%; width: 116%; height: 116%; background: radial-gradient(circle at 25% 30%, rgba(38,212,234,.10), transparent 45%), radial-gradient(circle at 75% 70%, rgba(135,60,244,.09), transparent 45%); border-radius: 24px; z-index: 0; pointer-events: none; }
+        .board > * { position: relative; z-index: 1; }
         .board h2 { margin: 0 12px 2px; font-size: 15px; }
         .board .hint { margin: 0 12px 10px; color: var(--muted); font-size: 12.5px; }
-        .canvas { position: relative; width: 820px; height: 1288px; margin: 0 auto; }
-        svg.links { position: absolute; inset: 0; width: 820px; height: 1288px; z-index: 1; pointer-events: none; }
-        .card { position: absolute; width: 136px; min-height: 56px; padding: 6px 8px 7px; z-index: 2; border: 1px solid var(--filet); background: #fff; border-radius: 12px; text-align: left; cursor: pointer; }
-        .card:hover { border-color: #b7c3d8; }
-        .card.on { border-color: var(--cyan-d); box-shadow: 0 0 0 3px rgba(38,212,234,.28); }
+        .canvas { position: relative; width: 1000px; height: 1500px; margin: 0 auto; }
+        svg.links { position: absolute; inset: 0; width: 1000px; height: 1500px; z-index: 1; pointer-events: none; }
+        .card { position: absolute; width: 200px; min-height: 82px; padding: 10px 12px 11px; z-index: 2; border: 1px solid var(--filet); background: #fff; border-radius: 14px; text-align: left; cursor: pointer; box-shadow: 0 4px 14px rgba(11,19,48,.06); transition: transform .18s, box-shadow .18s, border-color .18s; }
+        .card:hover { border-color: #b7c3d8; box-shadow: 0 10px 28px rgba(11,19,48,.14); transform: translateY(-2px); }
+        .card.on { border-color: var(--cyan-d); box-shadow: 0 0 0 4px rgba(38,212,234,.40), 0 10px 28px rgba(11,19,48,.14); }
         .card.next { border-color: var(--cyan-d); }
         .card.empty { background: #fbfcfe; }
         .card.empty .n { color: #9aa6bd; }
@@ -259,7 +260,7 @@ export default function AvancementPage() {
           <h2>Schéma des constatations</h2>
           <p className="hint">Clique une carte. La bulle sort de cette carte.</p>
           <div className="canvas" id="canvas">
-            <svg className="links" viewBox="0 0 820 1288">
+            <svg className="links" viewBox="0 0 1000 1500">
               <defs>
                 <marker id="ah" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0,0.8 L7,4 L0,7.2 Z" fill="#c5d0e0" /></marker>
                 <marker id="ah-hot" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0,0.8 L7,4 L0,7.2 Z" fill="#0aa8bd" /></marker>

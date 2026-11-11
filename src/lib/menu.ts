@@ -20,6 +20,7 @@ export const MENU_ADMIN: RoleMenu = { id: 'admin', label: 'Admin', items: [
   ]},
   { id: 'calendar', label: 'Calendrier', href: '/admin/calendrier' },
   { id: 'search', label: 'Recherche', href: '/admin/recherche' },
+  { id: 'structure', label: 'Structure', href: '/admin/structure' },
 ]};
 export const MENU_JURISTE: RoleMenu = { id: 'juriste', label: 'Juriste', items: [
   { id: 'avancement', label: 'Avancement', href: '/juriste/avancement' },

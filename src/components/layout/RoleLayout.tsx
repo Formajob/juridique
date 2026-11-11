@@ -21,7 +21,7 @@ export default function RoleLayout({ role, children }: RoleLayoutProps) {
 <Suspense fallback={<div className="w-64 shrink-0 bg-[#0b1330]" />}>
       <Sidebar role={role} userName={DEMO_USER_NAMES[role]} />
     </Suspense>
-      <main className="flex-1 min-w-0 p-6 lg:p-8 overflow-auto">{children}</main>
+      <main className="flex-1 min-w-0 p-6 lg:p-8 overflow-auto g-main">{children}</main>
     </div>
   );
 }

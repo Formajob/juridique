@@ -81,12 +81,12 @@ export default function Sidebar({ role, userName = role.charAt(0).toUpperCase() 
   }, [menu.items, pathname, search]);
 
   return (
-    <aside className="jx-side">
+    <aside className="jx-side g-side g-glass">
       <style>{CSS}</style>
       <FlowLogo variant="light" height={30} />
       <FlowTag variant="light" />
-      <p className="space">{SPACE_LABEL[role]}</p>
-      <nav>
+      <p className="space g-space">{SPACE_LABEL[role]}</p>
+      <nav className="g-nav">
         {menu.items.map((item) => {
           const hasSub = !!item.subitems?.length;
           const parentActive = hrefMatches(pathname, search, item.href);
@@ -160,7 +160,7 @@ export default function Sidebar({ role, userName = role.charAt(0).toUpperCase() 
           );
         })}
       </nav>
-      <div className="foot">
+      <div className="foot g-side-foot">
         <strong>{userName}</strong>
         {ROLE_LABEL[role]}
       </div>

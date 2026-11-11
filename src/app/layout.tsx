@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import '@/styles/globals.css';
+import '@/styles/glass.css';
 import type { ReactNode } from 'react';
 import { SessionProvider } from '@/components/providers/session-provider'
 
@@ -18,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body className="bg-background text-foreground antialiased">
+      <body className="bg-background text-foreground antialiased g-body">
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
