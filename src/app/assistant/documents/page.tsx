@@ -18,69 +18,98 @@ export default function AssistantDocumentsPage() {
   };
 
   return (
-    <div className="wrap-admin">
-      <header className="header">
+    <>
+      <header className="g-page-head g-rise" style={{ ['--d' as string]: '.02s' }}>
         <div>
-          <h1 className="header-title">Documents</h1>
-          <p style={{ fontSize: 13, color: 'var(--texte-secondaire)' }}>Note le remis ou la réception des documents.</p>
+          <div className="g-kicker"><i /> Espace Assistant · Documents</div>
+          <h1>Documents</h1>
+          <p>Note le remis ou la réception des documents. Un document n&rsquo;est pas stocké, seulement noté.</p>
         </div>
+        {selected && <span className="g-chip">{selected}</span>}
       </header>
 
-      <div style={{ display: 'grid', gap: 20 }}>
-        <div className="card">
-          <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--encre)', marginBottom: 12 }}>Dossiers disponibles</h2>
-          <ul className="list" style={{ paddingLeft: 0 }}>
-            {snap.cases.map((c) => (
-              <li key={c.reference}>
-                <button
-                  onClick={() => setSelected(c.reference)}
-                  className="btn-pill"
-                  style={{ justifyContent: 'space-between', fontWeight: 600 }}
-                >
-                  <span>{c.reference}</span>
-                  <span style={{ fontSize: 12, color: 'var(--texte-secondaire)' }}>{ETAPE_LABELS[c.etape] || c.etape}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+      <section className="g-card g-glass g-rise" style={{ ['--d' as string]: '.05s' }}>
+        <div className="g-card-head">
+          <div>
+            <h3 className="g-card-title">Dossiers disponibles</h3>
+            <p className="g-card-sub">Un clic sélectionne le dossier, puis ouvre la note de document.</p>
+          </div>
+          <span className="g-tag">{snap.cases.length}</span>
         </div>
-
-        {selected && (
-          <div className="card">
-            <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--encre)', marginBottom: 12 }}>{selected}</h2>
-            <div className="field">
-              <label>Action</label>
-              <select
-                value={action || ''}
-                onChange={(e) => setAction(e.target.value)}
-                style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--filet)', borderRadius: 6, fontFamily: 'var(--font-inter)' }}
+        <ul className="g-list">
+          {snap.cases.map((c) => (
+            <li key={c.reference}>
+              <button
+                type="button"
+                className="g-list-item"
+                onClick={() => setSelected(c.reference)}
+                style={selected === c.reference ? { background: 'var(--g-glass-2)', borderColor: 'rgba(37,99,235,.35)' } : undefined}
               >
-                <option value="">Sélectionner…</option>
-                <option value="remis">Document remis</option>
-                <option value="recu">Document reçu</option>
-                <option value="perdu">Document manquant</option>
-              </select>
-            </div>
-            <div style={{ marginTop: 16 }}>
-              <button className="btn-primary" onClick={handleEnregistrer}>
-                Enregistrer
+                <span className="g-list-main">
+                  <b>{c.reference}</b>
+                  <span>{ETAPE_LABELS[c.etape] || c.etape}</span>
+                </span>
+                <span className="g-list-side">→</span>
               </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {selected && (
+        <section className="g-card g-glass g-rise" style={{ ['--d' as string]: '.08s' }}>
+          <div className="g-card-head">
+            <div>
+              <h3 className="g-card-title">{selected}</h3>
+              <p className="g-card-sub">Choisir l&rsquo;action puis enregistrer. La fiche garde la trace.</p>
             </div>
           </div>
-        )}
+          <label className="g-field" style={{ maxWidth: 360 }}>
+            <span>Action</span>
+            <select value={action || ''} onChange={(e) => setAction(e.target.value)}>
+              <option value="">Sélectionner…</option>
+              <option value="remis">Document remis</option>
+              <option value="recu">Document reçu</option>
+              <option value="perdu">Document manquant</option>
+            </select>
+          </label>
+          <div className="g-card-foot" style={{ marginTop: 16 }}>
+            <span>Rien n&rsquo;est envoyé ni stocké</span>
+            <button className="g-btn" onClick={handleEnregistrer} disabled={!action}>Enregistrer</button>
+          </div>
+        </section>
+      )}
 
-        <div className="card">
-          <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--encre)', marginBottom: 12 }}>Reçu des autres onglets</h2>
-          <ul className="list" style={{ paddingLeft: 0 }}>
+      <section className="g-card g-glass g-rise" style={{ ['--d' as string]: '.11s' }}>
+        <div className="g-card-head">
+          <div>
+            <h3 className="g-card-title">Reçu des autres onglets</h3>
+            <p className="g-card-sub">Les derniers mouvements lus dans le workflow partagé.</p>
+          </div>
+        </div>
+        {snap.events.length === 0 ? (
+          <p className="g-empty">Aucun mouvement.</p>
+        ) : (
+          <ul className="g-list">
             {snap.events.slice(0, 10).map((e) => (
-              <li key={e.id} style={{ padding: '6px 0', fontSize: 12, color: 'var(--texte-secondaire)' }}>
-                {e.dossier} — {e.action} — {new Date(e.date).toLocaleString('fr-FR')}
+              <li key={e.id}>
+                <div className="g-list-item" style={{ cursor: 'default' }}>
+                  <span className="g-list-main">
+                    <b>{e.dossier}</b>
+                    <span>{e.action}</span>
+                  </span>
+                  <span className="g-list-side g-mono" suppressHydrationWarning>{new Date(e.date).toLocaleString('fr-FR')}</span>
+                </div>
               </li>
             ))}
-            {snap.events.length === 0 && <li style={{ color: 'var(--texte-secondaire)' }}>Aucun.</li>}
           </ul>
-        </div>
-      </div>
-    </div>
+        )}
+      </section>
+
+      <footer className="g-foot">
+        <span>ACX Flow · Documents — assistant</span>
+        <span className="g-tag">Glassy V22</span>
+      </footer>
+    </>
   );
 }

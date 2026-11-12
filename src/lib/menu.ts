@@ -9,7 +9,7 @@ export const MENU_ADMIN: RoleMenu = { id: 'admin', label: 'Admin', items: [
     { id: 'dossiers-convocations', label: 'Convocations', href: '/admin/dossiers?etape=convocation_seance' },
     { id: 'dossiers-seances', label: 'Séances', href: '/admin/dossiers?etape=seance_presente' },
     { id: 'dossiers-decisions', label: 'Décisions', href: '/admin/dossiers?etape=decision_licenciement' },
-    { id: 'dossiers-echeances', label: 'Échéances', href: '/admin/dossiers' },
+    { id: 'dossiers-echeances', label: 'Échéances', href: '/admin/dossiers?etape=echeances' },
     { id: 'dossiers-clos', label: 'Clos', href: '/admin/dossiers?etape=cloture' },
   ]},
   { id: 'presence', label: 'Présence', href: '/admin/presence', subitems: [
@@ -20,7 +20,6 @@ export const MENU_ADMIN: RoleMenu = { id: 'admin', label: 'Admin', items: [
   ]},
   { id: 'calendar', label: 'Calendrier', href: '/admin/calendrier' },
   { id: 'search', label: 'Recherche', href: '/admin/recherche' },
-  { id: 'structure', label: 'Structure', href: '/admin/structure' },
 ]};
 export const MENU_JURISTE: RoleMenu = { id: 'juriste', label: 'Juriste', items: [
   { id: 'avancement', label: 'Avancement', href: '/juriste/avancement' },

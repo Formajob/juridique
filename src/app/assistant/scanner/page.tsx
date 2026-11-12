@@ -35,57 +35,64 @@ export default function AssistantScannerPage() {
   };
 
   return (
-    <div className="wrap-admin">
-      <header className="header">
+    <>
+      <header className="g-page-head g-rise" style={{ ['--d' as string]: '.02s' }}>
         <div>
-          <h1 className="header-title">Scanner</h1>
-          <p style={{ fontSize: 13, color: 'var(--texte-secondaire)' }}>Lit le jeton QR et affiche la personne attendue.</p>
+          <div className="g-kicker"><i /> Espace Assistant · Scanner</div>
+          <h1>Scanner</h1>
+          <p>Lit le jeton QR et affiche la personne attendue. Rien n&apos;est enregistré.</p>
         </div>
+        <span className="g-chip">Démo</span>
       </header>
 
-      <div className="card" style={{ marginTop: 16, maxWidth: 560, margin: '0 auto' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px', border: '2px dashed var(--filet)', borderRadius: 8, background: 'var(--fond)', cursor: 'pointer' }}>
-            <div style={{ textAlign: 'center', color: 'var(--texte-secondaire)' }}>
-              <div style={{ fontSize: 48, fontWeight: 700, color: 'var(--navy)' }}>📷</div>
-              <div style={{ fontSize: 13, fontWeight: 500 }}>Scanner le QR du rendez-vous</div>
-            </div>
-          </div>
-
-          <div className="field">
-            <label>Jeton (ou scannez le QR)</label>
-            <input
-              value={jeton}
-              onChange={(e) => setJeton(e.target.value)}
-              placeholder="Ex: DEMO-2026-0006"
-              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--filet)', borderRadius: 6, fontFamily: 'var(--font-inter)' }}
-            />
-          </div>
-
-          <button
-            onClick={handleLire}
-            className="btn-primary"
-            style={{ width: '100%' }}
-          >
-            Lire le jeton
-          </button>
+      <section className="g-card g-glass g-rise" style={{ ['--d' as string]: '.05s', maxWidth: 560, margin: '0 auto', width: '100%' }}>
+        <div
+          className="g-scan"
+          onClick={() => document.getElementById('jeton')?.focus()}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter') document.getElementById('jeton')?.focus(); }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+            <path d="M4 8V5h3M20 8V5h-3M4 16v3h3M20 16v3h-3" />
+            <path d="M4 12h16" />
+          </svg>
+          <b>Scanner le QR du rendez-vous</b>
+          <span>Le lecteur n&apos;est pas branché sur cette copie : saisir le jeton.</span>
         </div>
-      </div>
+
+        <label className="g-field" style={{ marginTop: 16 }}>
+          <span>Jeton (ou scannez le QR)</span>
+          <input
+            id="jeton"
+            value={jeton}
+            onChange={(e) => setJeton(e.target.value)}
+            placeholder="Ex: DEMO-2026-0006"
+          />
+        </label>
+
+        <button onClick={handleLire} className="g-btn" style={{ width: '100%', marginTop: 14 }}>
+          Lire le jeton
+        </button>
+      </section>
 
       {resultat && (
-        <div className="card" style={{ marginTop: 16, maxWidth: 560, margin: '0 auto', textAlign: 'center', padding: '24px' }}>
-          <div style={{ fontSize: 48, fontWeight: 700, color: 'var(--navy)' }}>{resultat.ref}</div>
-          <div style={{ fontSize: 13, color: 'var(--texte-secondaire)', marginTop: 8 }}>
-            Heure : <strong>{resultat.heure}</strong>
+        <section className="g-card g-glass g-rise" style={{ ['--d' as string]: '.08s', maxWidth: 560, margin: '0 auto', width: '100%', textAlign: 'center' }}>
+          <span className="g-badge is-ok" style={{ margin: '0 auto' }}><i className="g-dot" />Jeton lu</span>
+          <div className="g-num" style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-.03em', marginTop: 10 }}>{resultat.ref}</div>
+          <div className="g-card-sub" style={{ marginTop: 8 }}>
+            Heure : <b>{resultat.heure}</b> · Juriste à appeler : <b>{resultat.juriste}</b>
           </div>
-          <div style={{ fontSize: 13, color: 'var(--texte-secondaire)', marginTop: 4 }}>
-            Juriste à appeler : <strong>{resultat.juriste}</strong>
+          <div className="g-card-foot" style={{ justifyContent: 'center', marginTop: 14 }}>
+            <span>Personne attendue : Assistant 1</span>
           </div>
-          <div style={{ fontSize: 12, color: 'var(--texte-secondaire)', marginTop: 16 }}>
-            Personne attendue : Assistant 1
-          </div>
-        </div>
+        </section>
       )}
-    </div>
+
+      <footer className="g-foot">
+        <span>ACX Flow · Scanner — réception</span>
+        <span className="g-tag">Glassy V22</span>
+      </footer>
+    </>
   );
 }

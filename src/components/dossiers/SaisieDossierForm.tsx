@@ -54,70 +54,70 @@ export default function SaisieDossierForm({ redirectBase, defaultCreePar = 'Assi
     }
   }
 
-  const inputStyle = { width: '100%', padding: '9px 12px', border: '1px solid var(--filet)', borderRadius: 6, fontFamily: 'var(--font-inter)' };
+
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16 }}>
+    <form onSubmit={handleSubmit} className="g-form">
       {message && (
-        <div style={{ padding: '10px 12px', background: 'var(--fond)', borderRadius: 6, color: 'var(--encre)', fontSize: 13, fontWeight: 600 }}>
+        <div className="g-note is-ok">
           {message}
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-        <div className="field">
+      <div className="g-form-grid">
+        <div className="g-field">
           <label>Référence (laisser vide pour auto)</label>
-          <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="DEMO-2026-0012" style={inputStyle} />
+          <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="DEMO-2026-0012" />
         </div>
-        <div className="field">
+        <div className="g-field">
           <label>Identifiant agent</label>
-          <input value={agentId} onChange={(e) => setAgentId(e.target.value)} placeholder="person-juriste-1" style={inputStyle} />
+          <input value={agentId} onChange={(e) => setAgentId(e.target.value)} placeholder="person-juriste-1" />
         </div>
-        <div className="field">
+        <div className="g-field">
           <label>Activité (LOB)</label>
-          <input value={lob} onChange={(e) => setLob(e.target.value)} style={inputStyle} />
+          <input value={lob} onChange={(e) => setLob(e.target.value)} />
         </div>
-        <div className="field">
+        <div className="g-field">
           <label>Département</label>
-          <input value={department} onChange={(e) => setDepartment(e.target.value)} style={inputStyle} />
+          <input value={department} onChange={(e) => setDepartment(e.target.value)} />
         </div>
-        <div className="field">
+        <div className="g-field">
           <label>Juriste assigné</label>
-          <select value={juristeId} onChange={(e) => setJuristeId(e.target.value)} style={inputStyle}>
+          <select value={juristeId} onChange={(e) => setJuristeId(e.target.value)}>
             <option value="">Aucun</option>
             <option value="person-juriste-1">Juriste 1</option>
             <option value="person-juriste-2">Juriste 2</option>
           </select>
         </div>
-        <div className="field">
+        <div className="g-field">
           <label>Étape initiale</label>
-          <select value={etape} onChange={(e) => setEtape(e.target.value)} style={inputStyle}>
+          <select value={etape} onChange={(e) => setEtape(e.target.value)}>
             {Object.entries(ETAPE_LABELS).map(([code, label]) => (
               <option key={code} value={code}>{label}</option>
             ))}
           </select>
         </div>
-        <div className="field">
+        <div className="g-field">
           <label>Statut</label>
-          <input value={statut} onChange={(e) => setStatut(e.target.value)} style={inputStyle} />
+          <input value={statut} onChange={(e) => setStatut(e.target.value)} />
         </div>
-        <div className="field">
+        <div className="g-field">
           <label>Créé par</label>
-          <input value={creePar} onChange={(e) => setCreePar(e.target.value)} style={inputStyle} />
+          <input value={creePar} onChange={(e) => setCreePar(e.target.value)} />
         </div>
-        <div className="field">
+        <div className="g-field">
           <label>Échéance</label>
-          <input type="date" value={echeance} onChange={(e) => setEcheance(e.target.value)} style={inputStyle} />
+          <input type="date" value={echeance} onChange={(e) => setEcheance(e.target.value)} />
         </div>
       </div>
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--encre)' }}>
+      <label className="g-check">
         <input type="checkbox" checked={reception} onChange={(e) => setReception(e.target.checked)} />
         Réception notée
       </label>
 
       <div>
-        <button type="submit" className="btn-primary">Saisir le dossier</button>
+        <button type="submit" className="g-btn">Saisir le dossier</button>
       </div>
     </form>
   );

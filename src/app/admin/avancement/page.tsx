@@ -12,32 +12,39 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSyncExternalStore } from 'react';
 import { usePathname } from 'next/navigation';
 import { getWorkflowState, setWorkflowState, subscribeWorkflow, transitionCase } from '@/lib/workflow-store';
+import { PEOPLE } from '@/lib/presence-demo';
 
 type Status = 'delai' | 'retard' | 'attente' | 'clos';
+function agentLabel(id?: string | null) {
+  if (!id) return '-';
+  const p = PEOPLE.find((x) => x.id === id);
+  return p ? p.nom : id;
+}
+
 interface DossierItem { ref: string; lob: string; agent: string; juriste: string; statut: Status; detail: string; echeance: string | null; }
 interface StepMeta { id: string; x: number; y: number; label: string; onglet: string; echeance: string; next: { id: string; label: string }[]; }
 interface Arrow { from: string; d: string; join?: boolean; }
 interface LabelItem { from: string; text: string; x: number; y: number; }
 
-const W = 200, H = 82, BUS = 1500;
+const W = 136, H = 56, BUS = 1188;
 
 const STEP_META: StepMeta[] = [
-  { id: 'constatation_recue', x: 260, y: 16, label: 'Constatation reçue', onglet: 'Constatations', echeance: '8 jours pour lancer l’analyse', next: [{ id: 'analyse_gravite', label: 'Lancer l’analyse' }] },
-  { id: 'analyse_gravite', x: 260, y: 120, label: 'Analyse', onglet: 'Analyse', echeance: '8 jours après la réception', next: [{ id: 'convocation_seance', label: 'Faute grave' }, { id: 'sanction_faute_non_grave', label: 'Faute non grave' }] },
-  { id: 'sanction_faute_non_grave', x: 10, y: 240, label: 'Sanction directe', onglet: 'Décisions', echeance: 'Pas de séance. Pas d’inspection.', next: [{ id: 'cloture', label: 'Clore' }] },
-  { id: 'convocation_seance', x: 260, y: 240, label: 'Convocation', onglet: 'Convocations', echeance: '8 jours · présence non notée', next: [{ id: 'seance_presente', label: 'Présent' }, { id: 'seance_absente', label: 'Absent' }] },
-  { id: 'seance_presente', x: 510, y: 380, label: 'Séance présente', onglet: 'Séances', echeance: 'Le papier reste dehors', next: [{ id: 'pv_seance', label: 'PV remis' }] },
-  { id: 'pv_seance', x: 510, y: 510, label: 'PV de séance', onglet: 'Séances', echeance: 'Choix non saisi', next: [{ id: 'decision_licenciement', label: 'Licenciement' }, { id: 'decision_mise_a_pied', label: 'Mise à pied' }, { id: 'decision_sanction', label: 'Sanction' }, { id: 'fin_procedure', label: 'Absence du fait' }] },
-  { id: 'seance_absente', x: 760, y: 380, label: 'Agent absent', onglet: 'Séances', echeance: 'Dépôt non saisi', next: [{ id: 'depot_inspection_absence', label: 'Déposer à l’inspection' }] },
-  { id: 'depot_inspection_absence', x: 760, y: 510, label: 'Dépôt inspection', onglet: 'Décisions', echeance: 'Branche absence', next: [{ id: 'investigations', label: 'Ouvrir les investigations' }] },
-  { id: 'investigations', x: 760, y: 660, label: 'Investigations', onglet: 'Décisions', echeance: 'L’outil note l’ouverture. Il n’enquête pas.', next: [{ id: 'decision_licenciement', label: 'Licenciement' }, { id: 'decision_mise_a_pied', label: 'Mise à pied' }, { id: 'decision_sanction', label: 'Sanction' }, { id: 'fin_procedure', label: 'Absence du fait' }] },
-  { id: 'decision_licenciement', x: 510, y: 840, label: 'Licenciement', onglet: 'Décisions', echeance: 'Puis les 48 heures', next: [{ id: 'notification_48h', label: 'Rappel des 48 heures' }] },
-  { id: 'decision_mise_a_pied', x: 260, y: 840, label: 'Mise à pied', onglet: 'Décisions', echeance: 'Puis les 48 heures', next: [{ id: 'notification_48h', label: 'Rappel des 48 heures' }] },
-  { id: 'decision_sanction', x: 760, y: 840, label: 'Sanction', onglet: 'Décisions', echeance: 'Pas d’inspection', next: [{ id: 'cloture', label: 'Clore' }] },
-  { id: 'fin_procedure', x: 510, y: 1000, label: 'Absence du fait', onglet: 'Décisions', echeance: 'Pas d’inspection', next: [{ id: 'cloture', label: 'Clore' }] },
-  { id: 'notification_48h', x: 260, y: 990, label: 'Rappel 48 h', onglet: 'Décisions', echeance: '48 heures. Visible aussi dans Échéances.', next: [{ id: 'depot_inspection_decision', label: 'Dépôt à l’inspection' }] },
-  { id: 'depot_inspection_decision', x: 260, y: 1130, label: 'Dépôt inspection', onglet: 'Décisions', echeance: 'Après les 48 heures', next: [{ id: 'cloture', label: 'Clore' }] },
-  { id: 'cloture', x: 260, y: 1290, label: 'Clos', onglet: 'Clos', echeance: 'Aucune branche ouverte', next: [] },
+  { id: 'constatation_recue', x: 342, y: 8, label: 'Constatation reçue', onglet: 'Constatations', echeance: '8 jours pour lancer l’analyse', next: [{ id: 'analyse_gravite', label: 'Lancer l’analyse' }] },
+  { id: 'analyse_gravite', x: 342, y: 112, label: 'Analyse', onglet: 'Analyse', echeance: '8 jours après la réception', next: [{ id: 'convocation_seance', label: 'Faute grave' }, { id: 'sanction_faute_non_grave', label: 'Faute non grave' }] },
+  { id: 'sanction_faute_non_grave', x: 24, y: 248, label: 'Sanction directe', onglet: 'Décisions', echeance: 'Pas de séance. Pas d’inspection.', next: [{ id: 'cloture', label: 'Clore' }] },
+  { id: 'convocation_seance', x: 342, y: 248, label: 'Convocation', onglet: 'Convocations', echeance: '8 jours · présence non notée', next: [{ id: 'seance_presente', label: 'Présent' }, { id: 'seance_absente', label: 'Absent' }] },
+  { id: 'seance_presente', x: 180, y: 400, label: 'Séance présente', onglet: 'Séances', echeance: 'Le papier reste dehors', next: [{ id: 'pv_seance', label: 'PV remis' }] },
+  { id: 'pv_seance', x: 180, y: 528, label: 'PV de séance', onglet: 'Séances', echeance: 'Choix non saisi', next: [{ id: 'decision_licenciement', label: 'Licenciement' }, { id: 'decision_mise_a_pied', label: 'Mise à pied' }, { id: 'decision_sanction', label: 'Sanction' }, { id: 'fin_procedure', label: 'Absence du fait' }] },
+  { id: 'seance_absente', x: 520, y: 400, label: 'Agent absent', onglet: 'Séances', echeance: 'Dépôt non saisi', next: [{ id: 'depot_inspection_absence', label: 'Déposer à l’inspection' }] },
+  { id: 'depot_inspection_absence', x: 520, y: 528, label: 'Dépôt inspection', onglet: 'Décisions', echeance: 'Branche absence', next: [{ id: 'investigations', label: 'Ouvrir les investigations' }] },
+  { id: 'investigations', x: 520, y: 656, label: 'Investigations', onglet: 'Décisions', echeance: 'L’outil note l’ouverture. Il n’enquête pas.', next: [{ id: 'decision_licenciement', label: 'Licenciement' }, { id: 'decision_mise_a_pied', label: 'Mise à pied' }, { id: 'decision_sanction', label: 'Sanction' }, { id: 'fin_procedure', label: 'Absence du fait' }] },
+  { id: 'decision_licenciement', x: 180, y: 820, label: 'Licenciement', onglet: 'Décisions', echeance: 'Puis les 48 heures', next: [{ id: 'notification_48h', label: 'Rappel des 48 heures' }] },
+  { id: 'decision_mise_a_pied', x: 340, y: 820, label: 'Mise à pied', onglet: 'Décisions', echeance: 'Puis les 48 heures', next: [{ id: 'notification_48h', label: 'Rappel des 48 heures' }] },
+  { id: 'decision_sanction', x: 500, y: 820, label: 'Sanction', onglet: 'Décisions', echeance: 'Pas d’inspection', next: [{ id: 'cloture', label: 'Clore' }] },
+  { id: 'fin_procedure', x: 660, y: 820, label: 'Absence du fait', onglet: 'Décisions', echeance: 'Pas d’inspection', next: [{ id: 'cloture', label: 'Clore' }] },
+  { id: 'notification_48h', x: 230, y: 960, label: 'Rappel 48 h', onglet: 'Décisions', echeance: '48 heures. Visible aussi dans Échéances.', next: [{ id: 'depot_inspection_decision', label: 'Dépôt à l’inspection' }] },
+  { id: 'depot_inspection_decision', x: 230, y: 1088, label: 'Dépôt inspection', onglet: 'Décisions', echeance: 'Après les 48 heures', next: [{ id: 'cloture', label: 'Clore' }] },
+  { id: 'cloture', x: 342, y: 1216, label: 'Clos', onglet: 'Clos', echeance: 'Aucune branche ouverte', next: [] },
 ];
 
 const FIXED_DATE = new Date().getTimezoneOffset() === 0 ? new Date(2025, 11, 1) : new Date(new Date().setDate(new Date().getDate()));
@@ -56,7 +63,7 @@ export default function AvancementPage() {
       const statut: Status = clos ? 'clos' : late ? 'retard' : c.echeance ? 'delai' : 'attente';
       const dateStr = c.echeance ? new Date(c.echeance).toLocaleDateString('fr-FR') : '';
       const detail = clos ? 'Clos · aucune branche ouverte' : late ? `En retard · échéance dépassée le ${dateStr}` : c.echeance ? `Dans le délai · échéance ${dateStr}` : 'En attente · aucune échéance';
-      return { ref: c.reference, lob: c.affectationFixe?.lob || '-', agent: c.agentId || '-', juriste: c.juriste?.nom || '-', statut, detail, echeance: c.echeance ?? null };
+      return { ref: c.reference, lob: c.affectationFixe?.lob || '-', agent: agentLabel(c.agentId), juriste: c.juriste?.nom || '-', statut, detail, echeance: c.echeance ?? null };
     });
   }
   const steps = STEP_META.map(m => ({ ...m, dossiers: dossiersFor(m.id) }));
@@ -69,22 +76,23 @@ export default function AvancementPage() {
   const T = (id: string) => byId[id].y;
   const arrows = [
     { from: 'constatation_recue', d: `M ${CX('constatation_recue')} ${B('constatation_recue')} V ${T('analyse_gravite')}` },
-    { from: 'analyse_gravite', d: `M ${CX('analyse_gravite')} ${B('analyse_gravite')} V 220 H ${CX('sanction_faute_non_grave')} V ${T('sanction_faute_non_grave')}` },
+    { from: 'analyse_gravite', d: `M ${CX('analyse_gravite')} ${B('analyse_gravite')} V 196 H ${CX('sanction_faute_non_grave')} V ${T('sanction_faute_non_grave')}` },
     { from: 'analyse_gravite', d: `M ${CX('analyse_gravite')} ${B('analyse_gravite')} V ${T('convocation_seance')}` },
     { from: 'sanction_faute_non_grave', d: `M ${CX('sanction_faute_non_grave')} ${B('sanction_faute_non_grave')} V ${BUS} H ${CX('cloture')} V ${T('cloture')}` },
-    { from: 'convocation_seance', d: `M ${CX('convocation_seance')} ${B('convocation_seance')} V 350 H ${CX('seance_presente')} V ${T('seance_presente')}` },
-    { from: 'convocation_seance', d: `M ${CX('convocation_seance')} ${B('convocation_seance')} V 350 H ${CX('seance_absente')} V ${T('seance_absente')}` },
+    { from: 'convocation_seance', d: `M ${CX('convocation_seance')} ${B('convocation_seance')} V 352 H ${CX('seance_presente')} V ${T('seance_presente')}` },
+    { from: 'convocation_seance', d: `M ${CX('convocation_seance')} ${B('convocation_seance')} V 352 H ${CX('seance_absente')} V ${T('seance_absente')}` },
     { from: 'seance_presente', d: `M ${CX('seance_presente')} ${B('seance_presente')} V ${T('pv_seance')}` },
     { from: 'seance_absente', d: `M ${CX('seance_absente')} ${B('seance_absente')} V ${T('depot_inspection_absence')}` },
     { from: 'depot_inspection_absence', d: `M ${CX('depot_inspection_absence')} ${B('depot_inspection_absence')} V ${T('investigations')}` },
-    { from: 'pv_join', d: `M ${CX('pv_seance')} ${B('pv_seance')} V 790`, join: true },
-    { from: 'investigations', d: `M ${CX('investigations')} ${B('investigations')} V 790 H 610`, join: true },
-    { from: 'pv_join', d: `M 610 790 V ${T('decision_licenciement')}` },
-    { from: 'pv_join', d: `M 610 790 H ${CX('decision_mise_a_pied')} V ${T('decision_mise_a_pied')}` },
-    { from: 'pv_join', d: `M 610 790 H ${CX('decision_sanction')} V ${T('decision_sanction')}` },
-    { from: 'pv_join', d: `M 610 790 V ${T('fin_procedure')}` },
-    { from: 'decision_licenciement', d: `M ${CX('decision_licenciement')} ${B('decision_licenciement')} V 950 H ${CX('notification_48h')} V ${T('notification_48h')}` },
-    { from: 'decision_mise_a_pied', d: `M ${CX('decision_mise_a_pied')} ${B('decision_mise_a_pied')} V ${T('notification_48h')}` },
+    { from: 'pv_seance', d: `M ${CX('pv_seance')} ${B('pv_seance')} V 748 H 488 V 772`, join: true },
+    { from: 'investigations', d: `M ${CX('investigations')} ${B('investigations')} V 748 H 488`, join: true },
+    { from: 'pv investig', d: `M ${CX('decision_licenciement')} 772 V ${T('decision_licenciement')}` },
+    { from: 'pv investig', d: `M ${CX('decision_mise_a_pied')} 772 V ${T('decision_mise_a_pied')}` },
+    { from: 'pv investig', d: `M ${CX('decision_sanction')} 772 V ${T('decision_sanction')}` },
+    { from: 'pv investig', d: `M ${CX('fin_procedure')} 772 V ${T('fin_procedure')}` },
+    { from: 'pv investig', d: `M ${CX('decision_licenciement')} 772 H ${CX('fin_procedure')}`, join: true },
+    { from: 'decision_licenciement', d: `M ${CX('decision_licenciement')} ${B('decision_licenciement')} V 918 H ${CX('notification_48h')} V ${T('notification_48h')}` },
+    { from: 'decision_mise_a_pied', d: `M ${CX('decision_mise_a_pied')} ${B('decision_mise_a_pied')} V 918 H ${CX('notification_48h')} V ${T('notification_48h')}` },
     { from: 'notification_48h', d: `M ${CX('notification_48h')} ${B('notification_48h')} V ${T('depot_inspection_decision')}` },
     { from: 'depot_inspection_decision', d: `M ${CX('depot_inspection_decision')} ${B('depot_inspection_decision')} V ${BUS} H ${CX('cloture')} V ${T('cloture')}` },
     { from: 'decision_sanction', d: `M ${CX('decision_sanction')} ${B('decision_sanction')} V ${BUS} H ${CX('cloture')} V ${T('cloture')}` },
@@ -92,21 +100,21 @@ export default function AvancementPage() {
   ];
   const labels = [
     { from: 'constatation_recue', text: 'Lancer l’analyse', x: CX('constatation_recue'), y: (B('constatation_recue') + T('analyse_gravite')) / 2 },
-    { from: 'analyse_gravite', text: 'Faute non grave', x: (CX('analyse_gravite') + CX('sanction_faute_non_grave')) / 2, y: 221 },
-    { from: 'analyse_gravite', text: 'Faute grave', x: CX('analyse_gravite'), y: (202 + T('convocation_seance')) / 2 },
-    { from: 'sanction_faute_non_grave', text: 'puis Clos', x: CX('sanction_faute_non_grave'), y: 806 },
-    { from: 'convocation_seance', text: 'Présent', x: CX('seance_presente'), y: (322 + T('seance_presente')) / 2 },
-    { from: 'convocation_seance', text: 'Absent', x: CX('seance_absente'), y: (322 + T('seance_absente')) / 2 },
+    { from: 'analyse_gravite', text: 'Faute non grave', x: (CX('analyse_gravite') + CX('sanction_faute_non_grave')) / 2, y: 196 },
+    { from: 'analyse_gravite', text: 'Faute grave', x: CX('analyse_gravite'), y: (196 + T('convocation_seance')) / 2 },
+    { from: 'sanction_faute_non_grave', text: 'puis Clos', x: CX('sanction_faute_non_grave'), y: 560 },
+    { from: 'convocation_seance', text: 'Présent', x: CX('seance_presente'), y: (352 + T('seance_presente')) / 2 },
+    { from: 'convocation_seance', text: 'Absent', x: CX('seance_absente'), y: (352 + T('seance_absente')) / 2 },
     { from: 'seance_presente', text: 'PV remis', x: CX('seance_presente'), y: (B('seance_presente') + T('pv_seance')) / 2 },
     { from: 'seance_absente', text: 'Dépôt', x: CX('seance_absente'), y: (B('seance_absente') + T('depot_inspection_absence')) / 2 },
     { from: 'depot_inspection_absence', text: 'Investigations', x: CX('depot_inspection_absence'), y: (B('depot_inspection_absence') + T('investigations')) / 2 },
-    { from: 'pv_join', text: 'Même choix', x: 610, y: 815 },
-    { from: 'decision_licenciement', text: '48 h', x: 300, y: (922 + T('notification_48h')) / 2 },
-    { from: 'decision_mise_a_pied', text: '48 h', x: 420, y: (922 + T('notification_48h')) / 2 },
+    { from: 'pv investig', text: 'Même choix', x: 488, y: 772 },
+    { from: 'decision_licenciement', text: '48 h', x: CX('notification_48h'), y: (918 + T('notification_48h')) / 2 },
+    { from: 'decision_mise_a_pied', text: '48 h', x: CX('notification_48h'), y: (918 + T('notification_48h')) / 2 },
     { from: 'notification_48h', text: 'Dépôt', x: CX('notification_48h'), y: (B('notification_48h') + T('depot_inspection_decision')) / 2 },
-    { from: 'depot_inspection_decision', text: 'Clos', x: CX('cloture'), y: BUS },
-    { from: 'decision_sanction', text: 'Clos', x: CX('decision_sanction'), y: 1500 },
-    { from: 'fin_procedure', text: 'Clos', x: CX('fin_procedure'), y: 1500 },
+    { from: 'depot_inspection_decision', text: 'Clos', x: (CX('depot_inspection_decision') + CX('cloture')) / 2, y: BUS },
+    { from: 'decision_sanction', text: 'Clos', x: CX('decision_sanction'), y: 1040 },
+    { from: 'fin_procedure', text: 'Clos', x: CX('fin_procedure'), y: 1040 },
   ];
   const hot = (from: string, id: string | null) => !!id && from.split(' ').includes(id);
   const selectedStep = steps.find(s => s.id === selectedId) || null;
@@ -173,78 +181,105 @@ export default function AvancementPage() {
   const clos = snap.cases.filter(c => c.etape === 'cloture').length;
   const retard = snap.cases.filter(c => c.etape !== 'cloture' && !!c.echeance && new Date(c.echeance) < new Date()).length;
   return (
-    <div className="wrap-admin">
+    <div className="g-page jx-av">
       <style>{`
-        :root { --navy: #0b1330; --encre: #18213b; --muted: #62708a; --fond: #f6f7fb; --filet: #e4e8f1; --cyan-d: #0aa8bd; --vert: #1f8a56; --vert-bg: #e8f6ee; --rouge: #b42318; --rouge-bg: #fdeceb; --ambre: #9a6700; --ambre-bg: #fff6e0; }
-        .page { max-width: 1180px; margin: 0 auto; padding: 24px 18px 48px; }
-        .kicker { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--cyan-d); font-weight: 700; }
-        .kicker i { width: 8px; height: 8px; border-radius: 50%; background: #26d4ea; display: inline-block; }
-        h1 { margin: 8px 0 4px; font-size: 28px; letter-spacing: -.03em; color: var(--navy); }
-        .lead { margin: 0 0 14px; max-width: 760px; color: var(--muted); font-size: 14.5px; line-height: 1.5; }
-        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
-        .stat { background: #fff; border: 1px solid var(--filet); border-radius: 14px; padding: 12px 14px; }
-        .stat b { display: block; font-size: 24px; color: var(--navy); letter-spacing: -.03em; }
-        .stat span { font-size: 12px; color: var(--muted); }
-        .stat.alert b { color: var(--rouge); }
-        .board { position: relative; overflow: hidden; background: #fff; border: 1px solid var(--filet); border-radius: 24px; padding: 16px 14px 20px; }
-        .board::before { content: ""; position: absolute; top: -8%; left: -8%; width: 116%; height: 116%; background: radial-gradient(circle at 25% 30%, rgba(38,212,234,.10), transparent 45%), radial-gradient(circle at 75% 70%, rgba(135,60,244,.09), transparent 45%); border-radius: 24px; z-index: 0; pointer-events: none; }
-        .board > * { position: relative; z-index: 1; }
-        .board h2 { margin: 0 12px 2px; font-size: 15px; }
-        .board .hint { margin: 0 12px 10px; color: var(--muted); font-size: 12.5px; }
-        .canvas { position: relative; width: 1000px; height: 1500px; margin: 0 auto; }
-        svg.links { position: absolute; inset: 0; width: 1000px; height: 1500px; z-index: 1; pointer-events: none; }
-        .card { position: absolute; width: 200px; min-height: 82px; padding: 10px 12px 11px; z-index: 2; border: 1px solid var(--filet); background: #fff; border-radius: 14px; text-align: left; cursor: pointer; box-shadow: 0 4px 14px rgba(11,19,48,.06); transition: transform .18s, box-shadow .18s, border-color .18s; }
-        .card:hover { border-color: #b7c3d8; box-shadow: 0 10px 28px rgba(11,19,48,.14); transform: translateY(-2px); }
-        .card.on { border-color: var(--cyan-d); box-shadow: 0 0 0 4px rgba(38,212,234,.40), 0 10px 28px rgba(11,19,48,.14); }
-        .card.next { border-color: var(--cyan-d); }
-        .card.empty { background: #fbfcfe; }
-        .card.empty .n { color: #9aa6bd; }
-        .ong { font-size: 9px; letter-spacing: .05em; text-transform: uppercase; color: var(--cyan-d); font-weight: 800; }
-        .n { font-size: 20px; line-height: 1; color: var(--navy); letter-spacing: -.03em; }
-        .lab { font-size: 12px; font-weight: 750; line-height: 1.2; }
-        .sub { margin-top: 2px; font-size: 10.5px; color: var(--muted); }
-        .late { color: var(--rouge); font-weight: 750; }
-        .onarrow { position: absolute; z-index: 4; transform: translate(-50%, -50%); background: #fff; border: 1px solid #d5deec; border-radius: 999px; padding: 2px 7px; font-size: 11px; font-weight: 750; color: var(--navy); white-space: nowrap; pointer-events: none; line-height: 1.3; }
-        .onarrow.hot { border-color: var(--cyan-d); color: var(--cyan-d); background: #f3fcfe; }
-        .pop { position: fixed; display: block; width: 340px; max-height: min(78vh, 640px); overflow: auto; z-index: 50; background: #fff; border: 1px solid #9eeaf4; border-radius: 16px; box-shadow: 0 16px 36px rgba(11,19,48,.16); padding: 12px 12px 10px; }
-        .pop:before { content: ""; position: absolute; width: 12px; height: 12px; background: #fff; border: 1px solid #9eeaf4; transform: rotate(45deg); }
-        .pop.right:before { left: -7px; top: var(--tail, 22px); border-right: 0; border-top: 0; }
-        .pop.left:before { right: -7px; top: var(--tail, 22px); border-left: 0; border-bottom: 0; }
-        .pop.below:before { top: -7px; left: var(--tail, 28px); border-right: 0; border-bottom: 0; }
-        .pop.above:before { bottom: -7px; left: var(--tail, 28px); border-left: 0; border-top: 0; }
-        .pop h3 { margin: 0; font-size: 15px; color: var(--navy); }
-        .pop .top { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
-        .x { border: 0; background: #f3f6fb; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; color: var(--muted); font-size: 16px; line-height: 1; flex: 0 0 24px; }
-        .where { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
-        .ensuite { margin: 12px 0; padding: 10px; border-radius: 12px; background: #f4fcfe; border: 1px solid #d7f4f8; }
-        .ensuite p { margin: 0 0 6px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--cyan-d); font-weight: 800; }
-        .ensuite button, .go { display: block; width: 100%; text-align: left; margin-top: 6px; cursor: pointer; border: 1px solid #d7f4f8; background: #fff; border-radius: 10px; padding: 7px 8px; color: var(--navy); font-size: 12.5px; font-weight: 700; }
-        .go small { display: block; font-weight: 650; color: var(--muted); font-size: 11px; }
-        .pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
-        .pill { font-size: 11.5px; border-radius: 999px; padding: 3px 8px; font-weight: 750; }
-        .ok { background: var(--vert-bg); color: var(--vert); }
-        .bad { background: var(--rouge-bg); color: var(--rouge); }
-        .wait { background: var(--ambre-bg); color: var(--ambre); }
-        .mute { background: #f3f6fb; color: var(--muted); }
-        ul.dossiers { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 220px; overflow: auto; }
-        ul.dossiers li.on { background: #f4fcfe; border-radius: 10px; padding: 8px; }
-        ul.dossiers li { border-top: 1px solid var(--filet); padding-top: 8px; }
-        .ref { font-weight: 750; font-size: 13px; color: var(--navy); }
-        .meta { font-size: 12px; color: var(--muted); line-height: 1.35; }
-        .note { margin: 10px 12px 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
-
-        .refbtn, .notify { border: 0; background: transparent; padding: 0; cursor: pointer; text-align: left; }
-        .refbtn { font-weight: 750; font-size: 13px; color: var(--navy); text-decoration: underline; }
-        .refbtn.on { color: var(--cyan-d); }
-        .notify { display: inline-block; margin-top: 4px; border-radius: 999px; padding: 4px 8px; background: var(--navy); color: #fff; font-size: 11px; font-weight: 800; }
-        .preview { display: grid; gap: 6px; margin-top: 8px; padding: 10px; border-radius: 12px; background: #f7f9fc; border: 1px solid var(--filet); }
-        .preview p { margin: 0; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--cyan-d); font-weight: 800; }
-        .preview .line { font-size: 12px; color: var(--encre); line-height: 1.4; }
-        .preview .line b { display: inline-block; min-width: 52px; color: var(--muted); font-size: 11px; }
-        .preview pre { margin: 0; white-space: pre-wrap; font: inherit; font-size: 12px; line-height: 1.45; color: var(--encre); }
-        .preview button { border: 0; border-radius: 999px; background: #f3f6fb; color: var(--navy); padding: 6px 8px; font-weight: 800; cursor: pointer; }
-        @media (max-width: 980px) { .stats { grid-template-columns: 1fr 1fr; } }
-        @media (max-width: 640px) { .stats { grid-template-columns: 1fr 1fr; } }
+        .jx-av h1 { margin: 6px 0 4px; font-size: 26px; letter-spacing: -.035em; color: var(--g-text); font-weight: 760; }
+        .jx-av .kicker { display: flex; align-items: center; gap: 8px; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #0e7490; font-weight: 800; }
+        .jx-av .kicker i { width: 6px; height: 6px; border-radius: 50%; background: var(--g-cyan); display: inline-block; box-shadow: 0 0 0 3px rgba(8,145,178,.16); }
+        .jx-av .lead { margin: 4px 0 14px; max-width: 820px; color: var(--g-muted); font-size: 13px; line-height: 1.55; }
+        .jx-av .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+        .jx-av .stat {
+          background: var(--g-glass); border: 1px solid var(--g-stroke); border-radius: 18px; padding: 14px 16px;
+          box-shadow: var(--g-shadow), inset 0 1px 0 rgba(255,255,255,.7);
+          backdrop-filter: blur(var(--g-blur)) saturate(160%);
+        }
+        .jx-av .stat b { display: block; font-size: 26px; color: var(--g-text); letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+        .jx-av .stat span { font-size: 11.5px; font-weight: 650; color: var(--g-muted); }
+        .jx-av .stat.alert b { color: #be123c; }
+        .jx-av .board {
+          background: var(--g-glass); border: 1px solid var(--g-stroke); border-radius: 22px; padding: 16px 14px 20px; overflow: auto;
+          box-shadow: var(--g-shadow), inset 0 1px 0 rgba(255,255,255,.7);
+          backdrop-filter: blur(var(--g-blur)) saturate(160%);
+        }
+        .jx-av .board h2 { margin: 0 12px 2px; font-size: 15px; letter-spacing: -.02em; color: var(--g-text); font-weight: 730; }
+        .jx-av .board .hint { margin: 0 12px 10px; color: var(--g-muted); font-size: 12px; }
+        .jx-av .canvas { position: relative; width: 820px; height: 1288px; margin: 0 auto; }
+        .jx-av svg.links { position: absolute; inset: 0; width: 820px; height: 1288px; z-index: 1; pointer-events: none; }
+        .jx-av .card {
+          position: absolute; width: 136px; min-height: 56px; padding: 7px 9px 8px; z-index: 2;
+          border: 1px solid rgba(15,35,80,.12); background: rgba(255,255,255,.86); border-radius: 14px; text-align: left; cursor: pointer;
+          transition: border-color .18s, box-shadow .18s, transform .18s, background .18s;
+        }
+        .jx-av .card:hover { border-color: rgba(8,145,178,.5); transform: translateY(-1px); box-shadow: 0 12px 24px -18px rgba(15,35,80,.6); }
+        .jx-av .card.on { border-color: rgba(8,145,178,.75); background: rgba(8,145,178,.08); box-shadow: 0 0 0 3px rgba(8,145,178,.16); }
+        .jx-av .card.next { border-color: rgba(8,145,178,.45); }
+        .jx-av .card.empty { background: rgba(255,255,255,.55); }
+        .jx-av .card.empty .n { color: #9aa6bd; }
+        .jx-av .ong { font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: #0e7490; font-weight: 800; }
+        .jx-av .n { font-size: 20px; line-height: 1.1; color: var(--g-text); letter-spacing: -.03em; font-weight: 750; }
+        .jx-av .lab { font-size: 11.5px; font-weight: 750; line-height: 1.2; letter-spacing: -.01em; }
+        .jx-av .sub { margin-top: 2px; font-size: 10px; color: var(--g-muted); }
+        .jx-av .late { color: #be123c; font-weight: 750; }
+        .jx-av .onarrow {
+          position: absolute; z-index: 4; transform: translate(-50%, -50%);
+          background: rgba(255,255,255,.95); border: 1px solid rgba(15,35,80,.14); border-radius: 999px; padding: 2px 8px;
+          font-size: 10.5px; font-weight: 750; color: var(--g-text); white-space: nowrap; pointer-events: none; line-height: 1.4;
+        }
+        .jx-av .onarrow.hot { border-color: rgba(8,145,178,.6); color: #0e7490; background: #f0fdff; }
+        .jx-av .pop {
+          position: fixed; display: block; width: 340px; max-height: min(78vh, 640px); overflow: auto; z-index: 50;
+          background: rgba(255,255,255,.97); border: 1px solid rgba(8,145,178,.28); border-radius: 18px;
+          box-shadow: 0 24px 60px -30px rgba(11,19,48,.55); padding: 14px;
+        }
+        .jx-av .pop:before { content: ""; position: absolute; width: 12px; height: 12px; background: rgba(255,255,255,.97); border: 1px solid rgba(8,145,178,.28); transform: rotate(45deg); }
+        .jx-av .pop.right:before { left: -7px; top: var(--tail, 22px); border-right: 0; border-top: 0; }
+        .jx-av .pop.left:before { right: -7px; top: var(--tail, 22px); border-left: 0; border-bottom: 0; }
+        .jx-av .pop.below:before { top: -7px; left: var(--tail, 28px); border-right: 0; border-bottom: 0; }
+        .jx-av .pop.above:before { bottom: -7px; left: var(--tail, 28px); border-left: 0; border-top: 0; }
+        .jx-av .pop h3 { margin: 0; font-size: 15px; color: var(--g-text); letter-spacing: -.02em; }
+        .jx-av .pop .top { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+        .jx-av .x {
+          border: 1px solid rgba(15,35,80,.14); background: rgba(243,246,251,.9); width: 26px; height: 26px; border-radius: 50%;
+          cursor: pointer; color: var(--g-muted); font-size: 16px; line-height: 1; flex: 0 0 26px;
+        }
+        .jx-av .x:hover { border-color: rgba(225,29,72,.4); color: #be123c; }
+        .jx-av .where { margin: 4px 0 0; font-size: 12px; color: var(--g-muted); line-height: 1.45; }
+        .jx-av .ensuite { margin: 12px 0; padding: 11px; border-radius: 14px; background: rgba(8,145,178,.06); border: 1px solid rgba(8,145,178,.18); }
+        .jx-av .ensuite p { margin: 0 0 6px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #0e7490; font-weight: 800; }
+        .jx-av .ensuite button, .jx-av .go {
+          display: block; width: 100%; text-align: left; margin-top: 6px; cursor: pointer;
+          border: 1px solid rgba(15,35,80,.12); background: rgba(255,255,255,.92); border-radius: 12px; padding: 8px 10px;
+          color: var(--g-text); font-size: 12.5px; font-weight: 700; transition: .18s;
+        }
+        .jx-av .ensuite button:hover, .jx-av .go:hover { border-color: rgba(37,99,235,.45); box-shadow: 0 10px 20px -16px rgba(37,99,235,.7); }
+        .jx-av .go small { display: block; font-weight: 600; color: var(--g-muted); font-size: 11px; }
+        .jx-av .pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+        .jx-av .pill { font-size: 10.5px; border-radius: 999px; padding: 3px 9px; font-weight: 800; }
+        .jx-av .ok { background: rgba(16,185,129,.12); color: #047857; }
+        .jx-av .bad { background: rgba(225,29,72,.1); color: #be123c; }
+        .jx-av .wait { background: rgba(217,119,6,.12); color: #b45309; }
+        .jx-av .mute { background: rgba(100,116,139,.12); color: #475569; }
+        .jx-av ul.dossiers { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 220px; overflow: auto; }
+        .jx-av ul.dossiers li { border-top: 1px solid var(--g-line); padding-top: 8px; }
+        .jx-av ul.dossiers li.on { background: rgba(8,145,178,.07); border-radius: 10px; padding: 8px; }
+        .jx-av .ref { font-weight: 750; font-size: 12.5px; color: var(--g-text); }
+        .jx-av .meta { font-size: 11.5px; color: var(--g-muted); line-height: 1.4; }
+        .jx-av .note { margin: 10px 12px 0; color: var(--g-muted); font-size: 12px; line-height: 1.5; }
+        .jx-av .refbtn, .jx-av .notify { border: 0; background: transparent; padding: 0; cursor: pointer; text-align: left; }
+        .jx-av .refbtn { font-weight: 750; font-size: 12.5px; color: var(--g-text); text-decoration: underline; }
+        .jx-av .refbtn.on { color: #0e7490; }
+        .jx-av .notify {
+          display: inline-block; margin-top: 4px; border-radius: 999px; padding: 4px 9px;
+          background: linear-gradient(120deg,#2563eb,#0891b2); color: #fff; font-size: 10.5px; font-weight: 800;
+        }
+        .jx-av .preview { display: grid; gap: 6px; margin-top: 8px; padding: 11px; border-radius: 14px; background: rgba(241,245,249,.8); border: 1px solid var(--g-line); }
+        .jx-av .preview p { margin: 0; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #0e7490; font-weight: 800; }
+        .jx-av .preview .line { font-size: 12px; color: var(--g-text); line-height: 1.45; }
+        .jx-av .preview .line b { display: inline-block; min-width: 52px; color: var(--g-muted); font-size: 11px; }
+        .jx-av .preview pre { margin: 0; white-space: pre-wrap; font: inherit; font-size: 12px; line-height: 1.45; color: var(--g-text); }
+        .jx-av .preview button { border: 0; border-radius: 999px; background: rgba(37,99,235,.1); color: #1d4ed8; padding: 6px 10px; font-weight: 800; cursor: pointer; }
+        @media (max-width: 980px) { .jx-av .stats { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 640px) { .jx-av .stats { grid-template-columns: 1fr 1fr; } }
       `}</style>
       <main className="page">
         <div className="kicker"><i></i> Données réelles · workflow partagé</div>
@@ -260,7 +295,7 @@ export default function AvancementPage() {
           <h2>Schéma des constatations</h2>
           <p className="hint">Clique une carte. La bulle sort de cette carte.</p>
           <div className="canvas" id="canvas">
-            <svg className="links" viewBox="0 0 1000 1500">
+            <svg className="links" viewBox="0 0 820 1288">
               <defs>
                 <marker id="ah" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0,0.8 L7,4 L0,7.2 Z" fill="#c5d0e0" /></marker>
                 <marker id="ah-hot" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0,0.8 L7,4 L0,7.2 Z" fill="#0aa8bd" /></marker>
@@ -349,7 +384,7 @@ function MailPreview({ dossier, onClose }: { dossier: string; onClose: () => voi
   const body = [
     'Convocation à une séance.',
     'Dossier : ' + dossier,
-    'Agent : ' + (c?.agentId || 'non précisé'),
+    'Agent : ' + agentLabel(c?.agentId),
     'Créneau : ' + when,
     'Cette note ne qualifie pas les faits.',
   ].join('\n');

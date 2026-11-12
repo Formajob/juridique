@@ -58,8 +58,22 @@ function save(s: WorkflowStore) {
   }
 }
 
+let stateDay = '';
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function getWorkflowState(): WorkflowStore {
-  if (!state) state = load();
+  // Les données de démonstration sont datées par rapport à « maintenant ».
+  // Sur le serveur, un état gardé en mémoire depuis le démarrage (ou depuis
+  // le build) afficherait des dates différentes de celles du navigateur :
+  // React signalait alors une erreur d'hydratation. On le rafraîchit chaque jour.
+  const day = todayKey();
+  if (!state || (!isBrowser() && stateDay !== day)) {
+    state = load();
+    stateDay = day;
+  }
   return state;
 }
 

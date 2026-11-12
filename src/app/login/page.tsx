@@ -1,20 +1,18 @@
 'use client'
 
-import { Suspense, useEffect, useState, useSyncExternalStore, FormEvent, ChangeEvent } from 'react'
+/**
+ * Page de connexion — autonome.
+ *
+ * Tout le style est ici, préfixé `lg-` : la page ne dépend d'aucune autre
+ * feuille (ni globals.css, ni glass.css) ni d'aucun composant de marque.
+ * C'est volontaire : elle doit s'afficher pareil quel que soit l'état du reste
+ * du projet. Les seules dépendances sont React, next-auth et next/navigation.
+ */
+
+import { Suspense, useEffect, useState, FormEvent, ChangeEvent } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { FlowLogo, FlowTag } from '@/components/brand/FlowBrand'
-import {
-  getLegalNoticeAcceptedServerSnapshot,
-  getLegalNoticeAcceptedSnapshot,
-  subscribeLegalNotice,
-} from '@/components/brand/LegalNoticeModal'
 
 export default function LoginPage() {
   return (
@@ -27,229 +25,256 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const fromFlow = searchParams.get('from') === 'flow'
-  const [signedIn, setSignedIn] = useState(false)
-  const legalAccepted = useSyncExternalStore(
-    subscribeLegalNotice,
-    getLegalNoticeAcceptedSnapshot,
-    getLegalNoticeAcceptedServerSnapshot
-  )
-  const showLegalNotice = (signedIn || status === 'authenticated') && !legalAccepted
 
   useEffect(() => {
     const prefilled = searchParams.get('email')
-    if (prefilled && prefilled.includes('@')) {
-      setEmail(prefilled.trim().toLowerCase())
-    }
+    if (prefilled && prefilled.includes('@')) setEmail(prefilled.trim().toLowerCase())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    if (status !== 'authenticated' || !session?.user) return
-    if (legalAccepted) {
-      router.replace('/dashboard')
-    }
-  }, [status, session, legalAccepted, router])
+    if (status === 'authenticated') router.replace('/dashboard')
+  }, [status, router])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
     setIsLoading(true)
-
     try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      })
-
+      const result = await signIn('credentials', { email, password, redirect: false })
       if (result?.error) {
-        setError('Email ou mot de passe invalide')
+        setError('Identifiants incorrects. Vérifiez votre adresse et votre mot de passe.')
+        setIsLoading(false)
         return
       }
-
-      setSignedIn(true)
-      if (!legalAccepted) {
-        router.replace('/legal-notice')
-      } else {
-        router.replace('/dashboard')
-      }
-    } catch (err) {
-      setError('Une erreur est survenue lors de la connexion')
-    } finally {
+      router.replace('/dashboard')
+    } catch {
+      setError('Connexion impossible pour le moment. Réessayez.')
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-[1.05fr_1fr] bg-[#f6f7fb]">
-      <section className="relative isolate flex min-h-screen flex-col overflow-hidden bg-[#0b1330] px-8 py-10 text-white sm:px-12 lg:px-14 lg:py-14">
-        <div className="flow-aurora flow-aurora-violet -top-52 -right-24 h-[560px] w-[560px]" />
-        <div className="flow-aurora flow-aurora-cyan -bottom-56 -left-28 h-[480px] w-[480px]" />
+    <div className="lg">
+      <style>{LG_CSS}</style>
 
-        <div className="relative z-10 flex h-full flex-col">
-          <div className="flex flex-col items-start gap-2.5">
-            <FlowLogo variant="light" height={34} />
-            <FlowTag variant="light" />
+      {/* ── colonne gauche ─────────────────────────────────────────── */}
+      <section className="lg-left">
+        <span className="lg-halo lg-halo-a" aria-hidden="true" />
+        <span className="lg-halo lg-halo-b" aria-hidden="true" />
+        <span className="lg-grid" aria-hidden="true" />
+
+        <div className="lg-left-in">
+          <div className="lg-brand">
+            <span className="lg-word">ACX<em>Flow</em></span>
+            <a className="lg-by" href="https://acx.ma/" target="_blank" rel="noreferrer">By ACX Maroc</a>
           </div>
 
-          <div className="my-auto py-12 max-w-xl">
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-white/12 bg-white/5 px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#d7e0f4]">
-              <span className="h-[7px] w-[7px] rounded-full bg-[#26d4ea] shadow-[0_0_0_5px_rgba(38,212,234,0.14)]" />
-              Espace Juridique
-            </div>
-
-            <h1 className="mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl">
-              Votre équipe.{' '}
-              <span className="flow-gradient-text">au même rythme.</span>
-            </h1>
-
-            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-[#9eb0cc]">
-              Gestion des dossiers juridiques, convocations, présence et suivi des échéances — réunis dans un espace unique, pensé pour l’activité juridique.
+          <div className="lg-pitch">
+            <span className="lg-chip"><i /> Espace Juridique</span>
+            <h1>Votre équipe.<br /><em>au même rythme.</em></h1>
+            <p>
+              Gestion des dossiers juridiques, convocations, présence et suivi des échéances —
+              réunis dans un espace unique, pensé pour l&rsquo;activité juridique.
             </p>
 
-            <dl className="mt-9 grid grid-cols-3 gap-4 max-w-md">
-              {[
-                { k: 'Dossiers', v: 'Réception · Traitement · Clôture' },
-                { k: 'Présence', v: 'Pointage · Suivi · Équipe' },
-                { k: 'Suivi', v: 'Étapes · Échéances · Statistiques' },
-              ].map((item) => (
-                <div key={item.k} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5">
-                  <dt className="text-[10.5px] font-extrabold uppercase tracking-[0.12em] text-[#26d4ea]">
-                    {item.k}
-                  </dt>
-                  <dd className="mt-1.5 text-[12.5px] leading-snug text-[#c3cee4]">{item.v}</dd>
-                </div>
-              ))}
-            </dl>
+            <div className="lg-tiles">
+              <div><span>Dossiers</span><b>Réception · Traitement · Clôture</b></div>
+              <div><span>Présence</span><b>Pointage · Suivi · Équipe</b></div>
+              <div><span>Suivi</span><b>Étapes · Échéances · Statistiques</b></div>
+            </div>
           </div>
 
-          <p className="text-[12px] text-[#7f90ae]">
-            © 2026 ACX Maroc — Plateforme interne. Tous droits réservés.
-          </p>
+          <p className="lg-copy">© 2026 ACX Maroc — Plateforme interne. Tous droits réservés.</p>
         </div>
       </section>
 
-      <section className="flex items-center justify-center bg-[#f6f7fb] px-5 py-10">
-        <div className="w-full max-w-[440px]">
-          <div className="mb-6 flex flex-col items-center gap-2 lg:hidden">
-            <FlowLogo height={30} />
-            <FlowTag />
+      {/* ── colonne droite ─────────────────────────────────────────── */}
+      <section className="lg-right">
+        <div className="lg-box">
+          <div className="lg-mobile-brand">
+            <span className="lg-word lg-word-dark">ACX<em>Flow</em></span>
+            <a className="lg-by lg-by-dark" href="https://acx.ma/" target="_blank" rel="noreferrer">By ACX Maroc</a>
           </div>
 
-          <Card className="flow-card">
-            <CardHeader className="space-y-2 px-7 pt-7">
-              <CardTitle className="text-[26px] font-extrabold tracking-tight text-[#0b1330]">
-                {fromFlow ? 'Espace Juridique' : 'Bienvenue'}
-              </CardTitle>
-              <CardDescription className="text-[#62708a]">
-                {fromFlow
-                  ? 'Saisissez votre mot de passe pour continuer.'
-                  : 'Connectez-vous à la plateforme ACX Flow.'}
-              </CardDescription>
-            </CardHeader>
-            <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-5 px-7 pt-5">
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
+          <div className="lg-card">
+            <header>
+              <h2>{fromFlow ? 'Espace Juridique' : 'Bienvenue'}</h2>
+              <p>{fromFlow ? 'Saisissez votre mot de passe pour continuer.' : 'Connectez-vous à la plateforme ACX Flow.'}</p>
+            </header>
 
-                {fromFlow && (
-                  <div className="flex items-center gap-2.5 rounded-2xl border border-[#dfccff] bg-[#f7f2ff] px-4 py-3 text-[13px] text-[#451282]">
-                    <span className="h-[7px] w-[7px] shrink-0 rounded-full bg-[#873cf4] shadow-[0_0_0_4px_rgba(135,60,244,0.14)]" />
-                    E-mail validé par le portail Flow — il ne reste que votre mot de passe.
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-[#18213b]">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="nom@vmanager.com"
-                    value={email}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                    required
-                    disabled={isLoading}
-                    className="flow-field px-4"
-                  />
+            <form onSubmit={handleSubmit} noValidate>
+              {error && <div className="lg-error" role="alert">{error}</div>}
+              {fromFlow && (
+                <div className="lg-note">
+                  <span aria-hidden="true" />
+                  E-mail validé par le portail Flow — il ne reste que votre mot de passe.
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-[#18213b]">
-                    Mot de passe
-                  </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Entrez votre mot de passe"
-                    value={password}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                    required
-                    disabled={isLoading}
-                    className="flow-field px-4"
-                  />
-                </div>
-              </CardContent>
-
-              <CardFooter className="flex-col space-y-4 px-7 pb-7 pt-6">
-                <Button
-                  type="submit"
-                  className="flow-button w-full"
+              <label className="lg-field">
+                <span>Email</span>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="nom@vmanager.com"
+                  value={email}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                  autoComplete="username"
                   disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      Connexion...
-                    </>
-                  ) : (
-                    'Se connecter'
-                  )}
-                </Button>
+                />
+              </label>
 
-                <div className="text-center text-[13px] text-[#62708a]">
-                  Pas de compte ?{' '}
-                  <a
-                    href="mailto:support@acx.ma?subject=Demande%20de%20compte%20ACX%20Flow"
-                    className="font-semibold text-[#873cf4] underline-offset-4 hover:underline"
-                  >
-                    Contactez l&apos;administrateur
-                  </a>
-                </div>
+              <label className="lg-field">
+                <span>Mot de passe</span>
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="Entrez votre mot de passe"
+                  value={password}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  disabled={isLoading}
+                />
+              </label>
 
-                <div className="w-full border-t border-[#e4e8f1] pt-4">
-                  <p className="mb-3 text-center text-[11px] font-semibold uppercase tracking-wider text-[#62708a]">
-                    Accès démo
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Link href="/admin" className="flow-button flex items-center justify-center text-[12px] !min-h-[40px]">
-                      Admin
-                    </Link>
-                    <Link href="/juriste" className="flow-button flex items-center justify-center text-[12px] !min-h-[40px]">
-                      Juriste
-                    </Link>
-                    <Link href="/assistant" className="flow-button flex items-center justify-center text-[12px] !min-h-[40px]">
-                      Assistant
-                    </Link>
-                  </div>
+              <button type="submit" className="lg-submit" disabled={isLoading}>
+                {isLoading ? 'Connexion…' : 'Se connecter'}
+              </button>
+
+              <p className="lg-help">
+                Pas de compte ?{' '}
+                <a href="mailto:support@acx.ma?subject=Demande%20de%20compte%20ACX%20Flow">Contactez l’administrateur</a>
+              </p>
+
+              <div className="lg-demo">
+                <p>Accès démo</p>
+                <div>
+                  <Link href="/admin">Admin</Link>
+                  <Link href="/juriste">Juriste</Link>
+                  <Link href="/assistant">Assistant</Link>
                 </div>
-              </CardFooter>
+              </div>
             </form>
-          </Card>
+          </div>
         </div>
       </section>
     </div>
   )
 }
+
+const LG_CSS = `
+.lg{
+  /* le fond global .g-aurora (fixed, z-index 0) est un frère rendu après cette page :
+     sans contexte d'empilement, il repeint PAR-DESSUS la carte du formulaire. */
+  position:relative;z-index:1;isolation:isolate;
+  display:grid;grid-template-columns:1.05fr 1fr;min-height:100vh;
+  background:
+    radial-gradient(circle at 78% 12%,rgba(124,58,237,.10),transparent 46%),
+    radial-gradient(circle at 62% 88%,rgba(34,211,238,.12),transparent 48%),
+    #eef2fb;
+  font-family:Inter,ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+  color:#0b1730;
+}
+.lg *{box-sizing:border-box}
+.lg :where(h1,h2,p){margin:0}
+.lg a{text-decoration:none;color:inherit}
+.lg button{font:inherit;cursor:pointer;border:0}
+
+/* colonne gauche */
+.lg-left{position:relative;isolation:isolate;overflow:hidden;display:flex;padding:44px 52px;color:#fff;
+  background:linear-gradient(155deg,#0b1330 0%,#0d1838 55%,#0a1228 100%)}
+.lg-halo{position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none;z-index:0}
+.lg-halo-a{width:520px;height:520px;top:-200px;right:-140px;background:radial-gradient(circle,rgba(124,58,237,.55),transparent 68%)}
+.lg-halo-b{width:460px;height:460px;bottom:-220px;left:-160px;background:radial-gradient(circle,rgba(34,211,238,.45),transparent 68%)}
+.lg-grid{position:absolute;inset:0;z-index:0;opacity:.32;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);
+  background-size:42px 42px}
+.lg-left-in{position:relative;z-index:1;display:flex;flex-direction:column;width:100%;gap:20px}
+.lg-brand{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.lg-word{font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1;color:#fff}
+.lg-word em{font-style:normal;background:linear-gradient(100deg,#67e8f9,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lg-word-dark{color:#0b1330}
+.lg-by{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:#c3cee4;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:4px 10px}
+.lg-by-dark{color:#54658a;border-color:rgba(15,35,80,.16)}
+.lg-pitch{margin:auto 0;max-width:520px;padding:28px 0}
+.lg-chip{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);
+  font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#d7e0f4}
+.lg-chip i{width:7px;height:7px;border-radius:50%;background:#26d4ea;box-shadow:0 0 0 5px rgba(38,212,234,.16)}
+.lg-pitch h1{margin-top:22px;font-size:clamp(30px,3.6vw,50px);line-height:1.07;letter-spacing:-.045em;font-weight:800;color:#fff}
+.lg-pitch h1 em{font-style:normal;background:linear-gradient(100deg,#67e8f9,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lg-pitch p{margin-top:18px;max-width:440px;font-size:14px;line-height:1.6;color:#9eb0cc}
+.lg-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:30px;max-width:470px}
+.lg-tiles div{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);border-radius:16px;padding:14px}
+.lg-tiles span{display:block;font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#26d4ea}
+.lg-tiles b{display:block;margin-top:6px;font-size:11.5px;line-height:1.45;font-weight:500;color:#c3cee4}
+.lg-copy{font-size:11px;color:#7f90ae}
+
+/* colonne droite */
+.lg-right{display:flex;align-items:center;justify-content:center;padding:44px 24px}
+.lg-box{width:100%;max-width:430px}
+.lg-mobile-brand{display:none;flex-direction:column;align-items:center;gap:8px;margin-bottom:20px}
+.lg-card{
+  padding:30px 28px 26px;border-radius:24px;
+  background:#fff;border:1px solid rgba(15,35,80,.10);
+  box-shadow:0 30px 70px -34px rgba(23,49,110,.45),0 2px 6px rgba(23,49,110,.06);
+}
+.lg-card header h2{font-size:25px;letter-spacing:-.035em;font-weight:800;color:#0b1730}
+.lg-card header p{margin-top:6px;font-size:13px;color:#54658a}
+.lg-card form{display:block}
+.lg-error{margin-top:16px;padding:10px 12px;border-radius:12px;font-size:12.5px;font-weight:650;
+  background:rgba(225,29,72,.08);color:#be123c;border:1px solid rgba(225,29,72,.2)}
+.lg-note{display:flex;align-items:center;gap:10px;margin-top:16px;padding:11px 13px;border-radius:12px;
+  font-size:12.5px;color:#6d28d9;background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.18)}
+.lg-note span{width:7px;height:7px;border-radius:50%;background:#7c3aed;box-shadow:0 0 0 4px rgba(124,58,237,.14);flex:0 0 7px}
+.lg-field{display:block;margin-top:16px}
+.lg-field > span{display:block;margin-bottom:7px;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#5b6b8c}
+.lg .lg-field input{
+  display:block;width:100%;height:46px;padding:0 14px;
+  border:1px solid rgba(15,35,80,.18);border-radius:12px;
+  background:#fff;color:#0b1730;font-size:13.5px;font-weight:600;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.lg .lg-field input::placeholder{color:#93a2bd;font-weight:500}
+.lg .lg-field input:hover{border-color:rgba(37,99,235,.45)}
+.lg .lg-field input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.16)}
+.lg .lg-field input:disabled{background:#f1f5fb;color:#7b8aa6}
+.lg .lg-submit{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;height:46px;margin-top:22px;border-radius:999px;
+  background:linear-gradient(100deg,#3b82f6,#22d3ee);
+  color:#fff;font-size:14px;font-weight:750;letter-spacing:-.005em;
+  box-shadow:0 16px 30px -18px rgba(37,99,235,.85);
+  transition:transform .18s,filter .18s;
+}
+.lg .lg-submit:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.lg .lg-submit:disabled{opacity:.75;cursor:progress;transform:none}
+.lg-help{margin-top:14px;text-align:center;font-size:12.5px;color:#54658a}
+.lg .lg-help a{color:#7c3aed;font-weight:750}
+.lg .lg-help a:hover{text-decoration:underline;text-underline-offset:3px}
+.lg-demo{margin-top:22px;padding-top:18px;border-top:1px solid rgba(15,35,80,.08)}
+.lg-demo p{text-align:center;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8290ab;margin-bottom:10px}
+.lg-demo div{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lg .lg-demo a{display:flex;align-items:center;justify-content:center;height:38px;border-radius:11px;
+  border:1px solid rgba(15,35,80,.16);background:#fff;color:#0b1730;font-size:12px;font-weight:700;transition:.2s}
+.lg .lg-demo a:hover{border-color:#2563eb;color:#1d4ed8}
+
+@media (max-width:980px){
+  .lg{grid-template-columns:1fr}
+  .lg-left{display:none}
+  .lg-right{padding:28px 18px;min-height:100vh}
+  .lg-mobile-brand{display:flex}
+}
+@media (max-width:420px){
+  .lg-card{padding:22px 18px 20px;border-radius:20px}
+  .lg-card header h2{font-size:22px}
+}
+`

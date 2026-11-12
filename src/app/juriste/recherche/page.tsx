@@ -64,81 +64,142 @@ export default function RecherchePage() {
   }, [query, snap, presence]);
 
   const empty = result && !result.dossiers.length && !result.events.length && !result.rdvs.length && !result.bureau.length && !result.tags.length;
+  const total = result ? result.dossiers.length + result.events.length + result.rdvs.length + result.bureau.length + result.tags.length : 0;
 
   return (
-    <div className="jx-sea">
-      <style>{CSS}</style>
-      <div className="kicker">Xceed · Juridique</div>
-      <h1>Recherche</h1>
-      <p className="sub">Référence, agent, étape, activité, objet, fait saisi, événement, rendez-vous, place du bureau. Deux lettres minimum.</p>
-      <form className="search" onSubmit={(e) => e.preventDefault()}>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ex. DEMO-2026, AGT, convocation, salle, Juriste" aria-label="Recherche générale" />
-      </form>
-      {!query && <p className="note">La recherche lit le workflow ouvert dans ce navigateur, pas une autre base.</p>}
-      {query.length === 1 && <p className="note">Encore une lettre.</p>}
-      {empty && <p className="note">Aucun résultat pour « {query} ».</p>}
+    <>
+      <header className="g-page-head g-rise" style={{ ['--d' as string]: '.02s' }}>
+        <div>
+          <div className="g-kicker"><i /> {path.startsWith('/juriste') ? 'Espace Juriste' : 'Espace Juridique'} · Recherche</div>
+          <h1>Recherche</h1>
+          <p>
+            Référence, agent, étape, activité, objet, fait saisi, événement, rendez-vous, place du bureau.
+            Deux lettres minimum.
+          </p>
+        </div>
+        {result && <span className="g-chip">{total} résultat{total > 1 ? 's' : ''}</span>}
+      </header>
+
+      <section className="g-card g-glass g-rise" style={{ ['--d' as string]: '.05s', maxWidth: 880 }}>
+        <form onSubmit={(e) => e.preventDefault()}>
+          <label className="g-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="11" cy="11" r="7" /><path d="m20 20-3.2-3.2" />
+            </svg>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Ex. DEMO-2026, AGT, convocation, salle, Juriste"
+              aria-label="Recherche générale"
+            />
+            {q && (
+              <button type="button" className="g-search-clear" onClick={() => setQ('')} aria-label="Effacer">
+                ×
+              </button>
+            )}
+          </label>
+        </form>
+
+        {!query && <p className="g-card-sub" style={{ marginTop: 10 }}>La recherche lit le workflow ouvert dans ce navigateur, pas une autre base.</p>}
+        {query.length === 1 && <p className="g-card-sub" style={{ marginTop: 10 }}>Encore une lettre.</p>}
+        {empty && <p className="g-empty">Aucun résultat pour « {query} ».</p>}
+      </section>
+
       {result && <Groups base={base} result={result} />}
-    </div>
+
+      <footer className="g-foot">
+        <span>ACX Flow · Recherche</span>
+        <span className="g-tag">Glassy V22</span>
+      </footer>
+    </>
   );
 }
 
 function Groups({ base, result }: { base: string; result: { dossiers: Case[]; events: CaseEvent[]; rdvs: Appointment[]; bureau: typeof PEOPLE; tags: typeof TAGS } }) {
   return (
-    <div className="groups">
+    <>
       <Group title="Dossiers" n={result.dossiers.length}>
         {result.dossiers.map((c) => (
-          <Link key={c.id} href={`${base}/dossiers/${c.reference}`} className="hit">
-            <b>{c.reference}</b>
-            <span>{ETAPE_LABELS[c.etape] || c.etape} · {c.affectationFixe?.lob || '—'} · {c.agentId || 'agent non précisé'}{extra(c, 'objet') ? ` · ${extra(c, 'objet')}` : ''}</span>
-          </Link>
+          <li key={c.id}>
+            <Link href={`${base}/dossiers/${c.reference}`} className="g-list-item">
+              <span className="g-list-main">
+                <b>{c.reference}</b>
+                <span>
+                  {ETAPE_LABELS[c.etape] || c.etape} · {c.affectationFixe?.lob || '—'} · {c.agentId || 'agent non précisé'}
+                  {extra(c, 'objet') ? ` · ${extra(c, 'objet')}` : ''}
+                </span>
+              </span>
+              <span className="g-list-side">→</span>
+            </Link>
+          </li>
         ))}
       </Group>
       <Group title="Événements" n={result.events.length}>
         {result.events.slice(0, 30).map((e) => (
-          <Link key={e.id} href={`${base}/dossiers/${e.dossier}`} className="hit">
-            <b>{e.dossier}</b>
-            <span>{e.action} · {new Date(e.date).toLocaleString('fr-FR')}</span>
-          </Link>
+          <li key={e.id}>
+            <Link href={`${base}/dossiers/${e.dossier}`} className="g-list-item">
+              <span className="g-list-main">
+                <b>{e.dossier}</b>
+                <span>{e.action} · {new Date(e.date).toLocaleString('fr-FR')}</span>
+              </span>
+              <span className="g-list-side">→</span>
+            </Link>
+          </li>
         ))}
       </Group>
       <Group title="Rendez-vous" n={result.rdvs.length}>
         {result.rdvs.map((a) => (
-          <Link key={a.id} href={`${base}/calendrier`} className="hit">
-            <b>{a.dossier}</b>
-            <span>{new Date(a.debut).toLocaleString('fr-FR')} · {a.lieu} · {a.statut}</span>
-          </Link>
+          <li key={a.id}>
+            <Link href={`${base}/calendrier`} className="g-list-item">
+              <span className="g-list-main">
+                <b>{a.dossier}</b>
+                <span>{new Date(a.debut).toLocaleString('fr-FR')} · {a.lieu} · {a.statut}</span>
+              </span>
+              <span className="g-list-side">→</span>
+            </Link>
+          </li>
         ))}
       </Group>
       <Group title="Bureau" n={result.bureau.length + result.tags.length}>
-        {result.bureau.map((p) => <div key={p.id} className="hit"><b>{p.nom}</b><span>{p.role === 'juriste' ? 'Juriste' : 'Assistant'} · présence</span></div>)}
-        {result.tags.map((t) => <div key={t.id} className="hit"><b>{t.label}</b><span>Tag de présence · {tagOf(t.id).color}</span></div>)}
+        {result.bureau.map((p) => (
+          <li key={p.id}>
+            <div className="g-list-item" style={{ cursor: 'default' }}>
+              <span className="g-list-main">
+                <b>{p.nom}</b>
+                <span>{p.role === 'juriste' ? 'Juriste' : 'Assistant'} · présence</span>
+              </span>
+              <span className="g-list-side"><span className="g-badge is-info"><i className="g-dot" />Place</span></span>
+            </div>
+          </li>
+        ))}
+        {result.tags.map((t) => (
+          <li key={t.id}>
+            <div className="g-list-item" style={{ cursor: 'default' }}>
+              <span className="g-list-main">
+                <b>{t.label}</b>
+                <span>Tag de présence</span>
+              </span>
+              <span className="g-list-side"><i className="g-dot" style={{ background: tagOf(t.id).color }} /></span>
+            </div>
+          </li>
+        ))}
       </Group>
-    </div>
+    </>
   );
 }
 
 function Group({ title, n, children }: { title: string; n: number; children: ReactNode }) {
   if (!n) return null;
   return (
-    <section className="card">
-      <h2>{title} · {n}</h2>
-      {children}
+    <section className="g-card g-glass">
+      <div className="g-card-head">
+        <div>
+          <h3 className="g-card-title">{title}</h3>
+          <p className="g-card-sub">{n} correspondance{n > 1 ? 's' : ''}</p>
+        </div>
+        <span className="g-tag">{n}</span>
+      </div>
+      <ul className="g-list">{children}</ul>
     </section>
   );
 }
-
-const CSS = `
-.jx-sea { color: #18213b; font-family: Inter, ui-sans-serif, system-ui, "Segoe UI", sans-serif; }
-.jx-sea * { box-sizing: border-box; }
-.jx-sea h1 { margin: 4px 0 0; font-size: 28px; letter-spacing: -.03em; color: #0b1330; }
-.jx-sea h2 { margin: 0 0 8px; font-size: 14px; color: #0b1330; }
-.jx-sea .kicker { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #0aa8bd; font-weight: 800; }
-.jx-sea .sub, .jx-sea .note { color: #62708a; font-size: 13px; line-height: 1.45; }
-.jx-sea .search { margin: 14px 0; }
-.jx-sea input { width: min(640px, 100%); border: 1px solid #e4e8f1; border-radius: 12px; padding: 12px 14px; font: inherit; color: #18213b; }
-.jx-sea .groups { display: grid; gap: 10px; }
-.jx-sea .card { background: #fff; border: 1px solid #e4e8f1; border-radius: 18px; padding: 14px; }
-.jx-sea .hit { display: block; padding: 8px 0; border-top: 1px solid #e4e8f1; color: inherit; text-decoration: none; }
-.jx-sea .hit b { display: block; color: #0b1330; }
-.jx-sea .hit span { display: block; margin-top: 2px; color: #62708a; font-size: 12.5px; }
-`;

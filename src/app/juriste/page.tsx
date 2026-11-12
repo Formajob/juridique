@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { createDemoTodayPointage } from '@/lib/demo-pointage';
 
 const DEMO_CASES = [
   { reference: 'DEMO-2026-0004', etape: 'analyse_gravite', statut: 'En cours' },
@@ -14,19 +13,6 @@ const DEMO_CASES = [
   { reference: 'DEMO-2026-0011', etape: 'depot_inspection_absence', statut: 'En cours' },
   { reference: 'DEMO-2026-0012', etape: 'investigations', statut: 'En cours' },
 ];
-
-const ETAPE_LABELS: Record<string, string> = {
-  analyse_gravite: 'Analyse',
-  convocation_seance: 'Convocations',
-  seance_presente: 'Séances',
-  seance_absente: 'Séances',
-  depot_inspection_absence: 'Dépôt',
-  investigations: 'Investigations',
-  decision_licenciement: 'Décisions',
-  decision_mise_a_pied: 'Décisions',
-  decision_sanction: 'Décisions',
-  cloture: 'Clos',
-};
 
 const TITRES_ETAPES = [
   { code: 'analyse_gravite', label: 'Analyse' },
@@ -50,48 +36,96 @@ export default function JuristeDashboardPage() {
     casParEtape[c.etape].push(c);
   }
 
-  const dossiersRecus = cas.filter(c => c.etape === 'constatation_recue').length;
-  const dossiersEnCours = cas.filter(c => !['cloture', 'fin_procedure', 'decision_licenciement', 'decision_mise_a_pied', 'decision_sanction'].includes(c.etape)).length;
+  const dossiersRecus = cas.filter((c) => c.etape === 'constatation_recue').length;
+  const dossiersEnCours = cas.filter(
+    (c) => !['cloture', 'fin_procedure', 'decision_licenciement', 'decision_mise_a_pied', 'decision_sanction'].includes(c.etape)
+  ).length;
 
   return (
-    <div className="wrap-admin">
-      <header className="header">
+    <>
+      <header className="g-page-head g-rise" style={{ ['--d' as string]: '.02s' }}>
         <div>
-          <h1 className="header-title">Tableau de bord</h1>
-          <p style={{ fontSize: 13, color: 'var(--texte-secondaire)' }}>Vue d&rsquo;ensemble des dossiers de démonstration.</p>
+          <div className="g-kicker"><i /> Espace Juriste</div>
+          <h1>Tableau de bord</h1>
+          <p>Vue d&rsquo;ensemble des dossiers de démonstration. Un clic ouvre la liste de l&rsquo;étape.</p>
         </div>
-        <Link href="/juriste/dossiers" className="btn-pill">Voir tous les dossiers</Link>
+        <div className="g-tools">
+          <Link href="/juriste/dossiers" className="g-btn g-btn--ghost g-btn--sm">Voir tous les dossiers</Link>
+        </div>
       </header>
 
-      <div className="card" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginTop: 16 }}>
-        <div style={{ textAlign: 'center', padding: '16px 12px' }}>
-          <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--navy)' }}>{dossiersRecus}</div>
-          <div style={{ fontSize: 12, color: 'var(--texte-secondaire)' }}>Dossiers reçus</div>
-        </div>
-        <div style={{ textAlign: 'center', padding: '16px 12px' }}>
-          <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--cyan-fonce)' }}>{dossiersEnCours}</div>
-          <div style={{ fontSize: 12, color: 'var(--texte-secondaire)' }}>En cours</div>
-        </div>
-        <div style={{ textAlign: 'center', padding: '16px 12px' }}>
-          <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--violet)' }}>5</div>
-          <div style={{ fontSize: 12, color: 'var(--texte-secondaire)' }}>Places de pointeurs</div>
-        </div>
-      </div>
+      <section className="g-kpis g-rise" style={{ ['--d' as string]: '.06s' }}>
+        <article className="g-kpi g-glass">
+          <div className="g-kpi-top">
+            <span className="g-kpi-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+                <path d="M4 5h16v14H4z" /><path d="M8 3v4M16 3v4M4 10h16" />
+              </svg>
+            </span>
+            <span className="g-delta">{dossiersRecus} reçus</span>
+          </div>
+          <b className="g-value g-num">{dossiersRecus}</b>
+          <span className="g-label">Dossiers reçus</span>
+        </article>
 
-      <div className="card" style={{ marginTop: 16 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--encre)', marginBottom: 12 }}>Répartition par étape</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-          {TITRES_ETAPES.filter(t => casParEtape[t.code])
-            .map((t) => (
-              <Link key={t.code} href={`/juriste/dossiers?etape=${t.code}`} className="btn-pill" style={{ justifyContent: 'space-between', fontWeight: 600 }}>
-                <span>{t.label}</span>
-                <span style={{ backgroundColor: 'var(--navy)', color: 'var(--blanc)', borderRadius: '999px', padding: '1px 10px', fontWeight: 700 }}>
-                  {casParEtape[t.code].length}
-                </span>
-              </Link>
-            ))}
+        <article className="g-kpi g-glass">
+          <div className="g-kpi-top">
+            <span className="g-kpi-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+                <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+              </svg>
+            </span>
+            <span className="g-delta is-info">en cours</span>
+          </div>
+          <b className="g-value g-num">{dossiersEnCours}</b>
+          <span className="g-label">Dossiers en cours</span>
+        </article>
+
+        <article className="g-kpi g-glass">
+          <div className="g-kpi-top">
+            <span className="g-kpi-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+                <circle cx="12" cy="8" r="3" /><path d="M5 19c1.2-3 3.4-4.5 7-4.5s5.8 1.5 7 4.5" />
+              </svg>
+            </span>
+            <span className="g-delta">bureau</span>
+          </div>
+          <b className="g-value g-num">5</b>
+          <span className="g-label">Places de pointeurs</span>
+        </article>
+      </section>
+
+      <section className="g-card g-glass g-rise" style={{ ['--d' as string]: '.1s' }}>
+        <div className="g-card-head">
+          <div>
+            <h3 className="g-card-title">Répartition par étape</h3>
+            <p className="g-card-sub">Les étapes que le juriste suit. Un clic filtre la liste des dossiers.</p>
+          </div>
         </div>
-      </div>
-    </div>
+        <div className="g-bars">
+          {TITRES_ETAPES.filter((t) => casParEtape[t.code]).map((t) => {
+            const n = casParEtape[t.code].length;
+            return (
+              <Link key={t.code} href={`/juriste/dossiers?etape=${t.code}`} className="g-bar">
+                <span className="g-bar-label"><i style={{ background: '#2563eb', color: '#2563eb' }} />{t.label}</span>
+                <span className="g-track">
+                  <span className="g-fill" style={{ width: `${Math.round((n / Math.max(1, cas.length)) * 100)}%` }} />
+                </span>
+                <span className="g-bar-val"><b className="g-num">{n}</b>dossier{n > 1 ? 's' : ''}</span>
+              </Link>
+            );
+          })}
+        </div>
+        <div className="g-card-foot">
+          <span>Total <b className="g-num">{cas.length}</b> dossiers de démonstration</span>
+          <span>Aucun motif affiché</span>
+        </div>
+      </section>
+
+      <footer className="g-foot">
+        <span>ACX Flow · Espace Juriste</span>
+        <span className="g-tag">Glassy V22</span>
+      </footer>
+    </>
   );
 }

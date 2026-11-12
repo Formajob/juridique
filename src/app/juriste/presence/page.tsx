@@ -1,27 +1,34 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
-import { subscribePresence, getPresence, PEOPLE, TAGS, startTag, registerDeparture, dayKey, overLimit, secondsOf, formatClock, type TagId } from '@/lib/presence-demo';
+/**
+ * Pointage personnel — Juriste / Assistant.
+ * Huit tags, un seul actif, minuteur qui tourne, dépassement en rouge, journal du jour.
+ */
+
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import {
+  subscribePresence, getPresence, PEOPLE, TAGS, startTag, registerDeparture,
+  dayKey, overLimit, secondsOf, formatClock, type TagId,
+} from '@/lib/presence-demo';
 
 export default function JuristePresencePage() {
   const state = useSyncExternalStore(subscribePresence, getPresence, getPresence);
   const juristes = PEOPLE.filter((p) => p.role === 'juriste');
-  const now = new Date();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
   const day = dayKey(now);
   const [selectedPersonId, setSelectedPersonId] = useState<string>(juristes[0]?.id || '');
 
-  const todaySegments = state.segments.filter((s) => {
-    const segDay = dayKey(new Date(s.start));
-    return segDay === day;
-  });
+  const todaySegments = state.segments.filter((s) => dayKey(new Date(s.start)) === day);
 
   const personSegments: Record<string, typeof state.segments[number] | null> = {};
   juristes.forEach((person) => {
     personSegments[person.id] = null;
     todaySegments.forEach((seg) => {
-      if (seg.personId === person.id) {
-        personSegments[person.id] = seg;
-      }
+      if (seg.personId === person.id) personSegments[person.id] = seg;
     });
   });
 
@@ -31,6 +38,7 @@ export default function JuristePresencePage() {
   const tag = seg ? seg.tag : null;
   const activeSec = seg ? secondsOf(seg, now) : 0;
   const late = tag ? overLimit(tag, activeSec) : false;
+  const tagDef = TAGS.find((t) => t.id === tag);
 
   const handleTagChange = (tagId: string) => {
     if (!person) return;
@@ -46,146 +54,189 @@ export default function JuristePresencePage() {
     registerDeparture(person.id, discharge);
   };
 
-  return (
-    <div className="jx-presence">
-      <style>{`
-        .jx-presence { color: #18213b; font-family: Inter, ui-sans-serif, system-ui, "Segoe UI", sans-serif; }
-        .jx-presence h1 { margin: 4px 0 0; font-size: 24px; letter-spacing: -.03em; color: #0b1330; }
-        .jx-presence .kicker { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #0aa8bd; font-weight: 800; }
-        .jx-presence .sub { color: #62708a; font-size: 13px; line-height: 1.5; }
-        .jx-presence .card { background: #fff; border: 1px solid #e4e8f1; border-radius: 18px; padding: 16px; margin-top: 12px; }
-        .jx-presence .cards { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
-        .jx-presence .person-card { border: 1px solid #e4e8f1; border-radius: 12px; padding: 12px; text-align: center; background: #fff; transition: border-color .2s; cursor: pointer; }
-        .jx-presence .person-card.active { border-color: #9eeaf4; background: #f4fcfe; }
-        .jx-presence .person-card .name { font-weight: 800; font-size: 13px; color: #0b1330; }
-        .jx-presence .person-card .role { font-size: 11px; color: #62708a; text-transform: uppercase; letter-spacing: .05em; }
-        .jx-presence .person-card .status { display: inline-block; padding: 3px 8px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; margin-top: 4px; }
-        .jx-presence .person-card .status.active { background: #e8f6ee; color: #1f8a56; }
-        .jx-presence .timer-box { margin-top: 16px; padding: 16px; background: #f8fafc; border-radius: 12px; }
-        .jx-presence .timer { font-size: 36px; font-weight: 800; color: #0b1330; font-variant-numeric: tabular-nums; line-height: 1; }
-        .jx-presence .timer-late { color: #b42318; }
-        .jx-presence .timer-label { font-size: 11px; color: #62708a; margin-top: 4px; }
-        .jx-presence .tag-selector { margin-top: 16px; padding-top: 12px; border-top: 1px solid #e4e8f1; }
-        .jx-presence .tag-selector .title { font-size: 12px; font-weight: 800; color: #62708a; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .05em; }
-        .jx-presence .tag-selector .tags { display: flex; flex-wrap: wrap; gap: 8px; }
-        .jx-presence .tag-selector .tag { padding: 8px 12px; border: 1px solid #e4e8f1; border-radius: 999px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s; }
-        .jx-presence .tag-selector .tag.active { border-color: #9eeaf4; background: #f4fcfe; color: #0b1330; }
-        .jx-presence .tag-selector .tag.absent { color: #b42318; border-color: #fdeceb; }
-        .jx-presence .tag-selector .tag.conge { color: #0f766e; border-color: #f0fdfa; }
-        .jx-presence .tag-selector .tag .icon { margin-right: 6px; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
-        .jx-presence .tag-selector .tag .label { display: block; font-weight: 600; font-size: 12px; }
-        .jx-presence .depart-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e4e8f1; }
-        .jx-presence .depart-btn { padding: 10px 16px; border: 1px solid #e4e8f1; border-radius: 12px; background: #fff; color: #334155; font-size: 13px; font-weight: 700; cursor: pointer; margin-right: 8px; }
-        .jx-presence .depart-btn:hover { background: #fdeceb; color: #b42318; border-color: #fdeceb; }
-        .jx-presence .depart-btn.urgence { background: #fdeceb; color: #b42318; border-color: #fdeceb; }
-        .jx-presence .journal { margin-top: 24px; }
-        .jx-presence .journal .section-title { font-size: 14px; font-weight: 800; color: #0b1330; margin-bottom: 12px; }
-        .jx-presence .journal-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .jx-presence .journal-table th { text-align: left; color: #62708a; font-size: 11px; padding: 8px; border-bottom: 1px solid #e4e8f1; text-transform: uppercase; }
-        .jx-presence .journal-table td { padding: 8px; border-bottom: 1px solid #e4e8f1; }
-        .jx-presence .journal-table tr:hover { background: #f8fafc; }
-      `}</style>
+  const journal = todaySegments.filter((s) => s.personId === person?.id);
 
-      <div className="jx-presence">
-        <div className="top">
+  return (
+    <>
+      <header className="g-page-head g-rise" style={{ ['--d' as string]: '.02s' }}>
+        <div>
+          <div className="g-kicker"><i /> Espace Juriste · Pointage</div>
+          <h1>Pointage — Juriste</h1>
+          <p>Huit tags, un seul actif à la fois, minuteur, dépassement en rouge, journal du jour.</p>
+        </div>
+        <span className="g-chip">{juristes.length} place{juristes.length > 1 ? 's' : ''}</span>
+      </header>
+
+      <section className="g-rise" style={{ ['--d' as string]: '.05s', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12 }}>
+        {juristes.map((p) => {
+          const s = personSegments[p.id];
+          const isOn = s !== null && s.end === null;
+          const active = selectedPersonId === p.id;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setSelectedPersonId(p.id)}
+              className="g-glass"
+              style={{
+                textAlign: 'left',
+                padding: '14px 16px',
+                borderRadius: 18,
+                border: `1px solid ${active ? 'rgba(37,99,235,.45)' : 'var(--g-stroke)'}`,
+                background: active ? 'rgba(37,99,235,.08)' : 'var(--g-glass)',
+                boxShadow: active ? '0 18px 40px -26px rgba(37,99,235,.65)' : 'var(--g-shadow)',
+                transition: '.2s',
+                cursor: 'pointer',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <b style={{ fontSize: 14, letterSpacing: '-.01em' }}>{p.nom}</b>
+                <span className={`g-badge ${isOn ? 'is-ok' : ''}`}><i className="g-dot" />{isOn ? 'En activité' : 'Inactif'}</span>
+              </div>
+              <span style={{ display: 'block', marginTop: 4, fontSize: 10.5, fontWeight: 750, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--g-muted-2)' }}>
+                {p.role === 'juriste' ? 'Juriste' : 'Assistant'}
+              </span>
+            </button>
+          );
+        })}
+      </section>
+
+      <section className="g-card g-glass g-rise" style={{ ['--d' as string]: '.08s' }}>
+        <div className="g-card-head">
           <div>
-            <div className="kicker">Xceed · Juridique</div>
-            <h1>Pointage — Juriste</h1>
-            <p className="sub">Huit tags en lignes, un seul actif, minuteur, dépassement en rouge, journal du jour.</p>
+            <h3 className="g-card-title">{person?.nom}</h3>
+            <p className="g-card-sub">{isActif ? 'Temps écoulé sur le tag en cours.' : 'Aucun tag actif pour cette place.'}</p>
+          </div>
+          {isActif && tagDef ? (
+            <span className="g-badge" style={{ color: tagDef.color, background: tagDef.bg }}>
+              <i className="g-dot" style={{ background: tagDef.color }} />{tagDef.label}
+            </span>
+          ) : (
+            <span className="g-badge"><i className="g-dot" />Journée libre</span>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap' }}>
+          <b
+            className="g-num"
+            suppressHydrationWarning
+            style={{ fontSize: 44, letterSpacing: '-.04em', lineHeight: 1, color: late ? 'var(--g-bad)' : 'var(--g-text)' }}
+          >
+            {isActif ? formatClock(activeSec) : '—:—:—'}
+          </b>
+          <span style={{ fontSize: 12, fontWeight: 700, color: late ? 'var(--g-bad)' : 'var(--g-muted)' }}>
+            {isActif ? (late ? 'Dépassement du plafond' : 'Temps écoulé') : 'Choisir un tag ci-dessous'}
+          </span>
+        </div>
+
+        <div className="g-card-head" style={{ marginTop: 18 }}>
+          <div>
+            <h3 className="g-card-title">Choisir un tag</h3>
+            <p className="g-card-sub">Un clic ferme le tag en cours et ouvre le nouveau.</p>
           </div>
         </div>
 
-        <div className="cards">
-          {juristes.map((p) => {
-            const s = personSegments[p.id];
-            const isOn = s !== null && s.end === null;
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {TAGS.map((t) => {
+            const on = tag === t.id && isActif;
             return (
-              <div
-                key={p.id}
-                onClick={() => setSelectedPersonId(p.id)}
-                className={`person-card ${selectedPersonId === p.id ? 'active' : ''}`}
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handleTagChange(t.id)}
+                disabled={!!(seg && seg.end !== null)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  height: 34,
+                  padding: '0 13px',
+                  borderRadius: 999,
+                  border: `1px solid ${on ? 'rgba(37,99,235,.5)' : 'rgba(15,35,80,.14)'}`,
+                  background: on ? t.bg : 'rgba(255,255,255,.82)',
+                  color: on ? t.color : 'var(--g-text)',
+                  fontSize: 12,
+                  fontWeight: 750,
+                  whiteSpace: 'nowrap',
+                  cursor: seg && seg.end !== null ? 'not-allowed' : 'pointer',
+                  opacity: seg && seg.end !== null ? 0.55 : 1,
+                  transition: '.18s',
+                }}
               >
-                <div className="name">{p.nom}</div>
-                <div className="role">{p.role === 'juriste' ? 'Juriste' : 'Assistant'}</div>
-                <div className="status" style={isOn ? { background: '#e8f6ee', color: '#1f8a56' } : { background: '#f3f6fb', color: '#62708a' }}>
-                  {isOn ? 'En activité' : 'Inactif'}
-                </div>
-              </div>
+                <i className="g-dot" style={{ background: t.color }} />
+                {t.label}
+              </button>
             );
           })}
         </div>
 
-        <div className="timer-box">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 800, color: '#62708a', textTransform: 'uppercase' }}>{person?.nom}</span>
-            {isActif && tag ? (
-              <span style={{ background: '#f3f6fb', color: TAGS.find((t) => t.id === tag)?.color, padding: '2px 6px', borderRadius: '99px', fontSize: '11px', fontWeight: 800 }}>
-                {TAGS.find((t) => t.id === tag)?.label}
-              </span>
-            ) : null}
-          </div>
-          <div className={`timer ${late ? 'timer-late' : ''}`}>{isActif ? formatClock(activeSec) : '—:—:—'}</div>
-          <div className="timer-label">{isActif ? (late ? 'Dépassement en rouge' : 'Temps écoulé') : 'Aucun tag actif'}</div>
-        </div>
-
-        <div className="tag-selector">
-          <div className="title">Choisir un tag</div>
-          <div className="tags">
-            {TAGS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                className={`tag ${tag === t.id ? 'active' : ''} ${t.id === 'absent' ? 'absent' : ''} ${t.id === 'conge' ? 'conge' : ''}`}
-                onClick={() => handleTagChange(t.id)}
-                disabled={!!(seg && seg.end !== null)}
-              >
-                <span className="icon" style={{ background: t.color }} />
-                <span className="label">{t.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {isActif && (
-          <div className="depart-section">
-            <button type="button" className="depart-btn" onClick={() => handleDeparture('objectif')}>
-              Départ (objectif)
-            </button>
-            <button type="button" className="depart-btn urgence" onClick={() => handleDeparture('urgence')}>
-              Départ (urgence)
-            </button>
+          <>
+            <div className="g-card-foot" style={{ marginTop: 18 }}>
+              <span>La sortie enregistre l&rsquo;heure de départ</span>
+              <span className="g-tag">Pas de paie</span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button type="button" className="g-btn g-btn--ghost g-btn--sm" style={{ whiteSpace: 'nowrap' }} onClick={() => handleDeparture('objectif')}>
+                Départ (objectif)
+              </button>
+              <button
+                type="button"
+                className="g-btn g-btn--ghost g-btn--sm"
+                style={{ color: 'var(--g-bad)', whiteSpace: 'nowrap' }}
+                onClick={() => handleDeparture('urgence')}
+              >
+                Départ (urgence)
+              </button>
+            </div>
+          </>
+        )}
+      </section>
+
+      <section className="g-card g-glass g-rise" style={{ ['--d' as string]: '.11s' }}>
+        <div className="g-card-head">
+          <div>
+            <h3 className="g-card-title">Journal du jour</h3>
+            <p className="g-card-sub">{person?.nom} · les mouvements de la journée.</p>
+          </div>
+          <span className="g-tag">{journal.length} mouvement{journal.length > 1 ? 's' : ''}</span>
+        </div>
+        {journal.length === 0 ? (
+          <p className="g-empty">Aucun mouvement aujourd&rsquo;hui pour cette place.</p>
+        ) : (
+          <div className="g-table-wrap">
+            <table className="g-table">
+              <thead>
+                <tr><th>Tag</th><th>Début</th><th>Fin</th><th>Durée</th></tr>
+              </thead>
+              <tbody>
+                {journal.map((s) => {
+                  const d = TAGS.find((t) => t.id === s.tag);
+                  const end = s.end ? new Date(s.end) : null;
+                  const start = new Date(s.start);
+                  return (
+                    <tr key={s.id} style={{ cursor: 'default' }}>
+                      <td>
+                        <span className="g-badge" style={{ color: d?.color, background: d?.bg }}>
+                          <i className="g-dot" style={{ background: d?.color }} />{d ? d.label : s.tag}
+                        </span>
+                      </td>
+                      <td className="g-num">{start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</td>
+                      <td className="g-num">{end ? end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                      <td className="g-num">{end ? Math.floor((end.getTime() - start.getTime()) / 60000) + ' min' : '—'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
+      </section>
 
-        <div className="journal">
-          <div className="section-title">Journal du jour</div>
-          <table className="journal-table">
-            <thead>
-              <tr>
-                <th>Tag</th>
-                <th>Début</th>
-                <th>Fin</th>
-                <th>Durée</th>
-              </tr>
-            </thead>
-            <tbody>
-              {todaySegments.filter((s) => s.personId === person?.id).map((s) => {
-                const tagDef = TAGS.find((t) => t.id === s.tag);
-                const end = s.end ? new Date(s.end) : null;
-                const start = new Date(s.start);
-                return (
-                  <tr key={s.id}>
-                    <td>{tagDef ? tagDef.label : s.tag}</td>
-                    <td>{start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</td>
-                    <td>{end ? end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
-                    <td>{end ? Math.floor((end.getTime() - start.getTime()) / 60000) + ' min' : '—'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+      <footer className="g-foot">
+        <span>ACX Flow · Pointage — présence du bureau seulement</span>
+        <span className="g-tag">Glassy V22</span>
+      </footer>
+    </>
   );
 }

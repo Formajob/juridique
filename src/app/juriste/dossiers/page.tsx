@@ -17,6 +17,7 @@ import type { Case } from '@/types/database';
 import { BRANCHES } from '@/lib/workflow-branch';
 import { createCase, getWorkflowState, setWorkflowState, subscribeWorkflow, transitionCase } from '@/lib/workflow-store';
 import { ETAPE_LABELS, etapePageGroup, pageTitleFor } from '@/lib/workflow-ui';
+import { PEOPLE } from '@/lib/presence-demo';
 
 const OBJETS = ['Abus de retard', 'Absence non justifié', 'Mise en objectif'];
 const DEPS = ['VL', 'SAC', 'RET', 'STC', 'SAC_AFFAIRE', 'STC_AFFAIRE', 'PAV'];
@@ -65,7 +66,9 @@ function addDays(iso: string, n: number) {
 function fr(iso: string) {
   if (!iso) return '—';
   const mois = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
-  const [y, m, d] = iso.split('-');
+  // On lit la partie date de l'ISO (UTC) : même résultat sur le serveur et
+  // dans le navigateur, quel que soit le fuseau horaire.
+  const [y, m, d] = iso.slice(0, 10).split('-');
   return `${Number(d)} ${mois[Number(m) - 1]} ${y}`;
 }
 function norm(s: string) {
@@ -93,6 +96,11 @@ function parseLooseDate(v: string) {
 function parseLooseTime(v: string) {
   const m = v.trim().match(/^(\d{1,2})[:h](\d{2})/);
   return m ? `${pad(Number(m[1]))}:${m[2]}` : '';
+}
+function agentLabel(id: string) {
+  if (!id) return '—';
+  const p = PEOPLE.find((x) => x.id === id);
+  return p ? p.nom : id;
 }
 function fieldOf(c: Case, key: string) {
   const v = c.affectationFixe?.[key];
@@ -356,7 +364,7 @@ function Constatations({ base }: { base: string }) {
                 return (
                   <tr key={c.id} className="pick" onClick={() => setOpenRef(c.reference)}>
                     <td className="ref">{c.reference}</td>
-                    <td>{c.agentId || '—'}</td>
+                    <td>{agentLabel(c.agentId || '')}</td>
                     <td>{fieldOf(c, 'objet') || '—'}</td>
                     <td>{new Date(c.createdAt).toLocaleDateString('fr-FR')}</td>
                     <td>{c.echeance ? new Date(c.echeance).toLocaleDateString('fr-FR') : '—'}</td>
@@ -375,7 +383,7 @@ function Constatations({ base }: { base: string }) {
               <div>
                 <span className="pill mute">Constatation reçue</span>
                 <h2>{opened.reference}</h2>
-                <p className="note">{opened.affectationFixe.lob || '—'} · {opened.agentId || '—'} · {fieldOf(opened, 'rapport') || 'sans n°'}</p>
+                <p className="note">{opened.affectationFixe.lob || '—'} · {agentLabel(opened.agentId || '')} · {fieldOf(opened, 'rapport') || 'sans n°'}</p>
               </div>
               <button className="x" type="button" onClick={() => setOpenRef(null)}>×</button>
             </div>
@@ -455,10 +463,14 @@ function DossierList({ role, base, etape }: { role: 'admin' | 'juriste'; base: s
   const snap = useSyncExternalStore(subscribeWorkflow, getWorkflowState, getWorkflowState);
   const [openRef, setOpenRef] = useState<string | null>(null);
   const [note, setNote] = useState('');
-  const isEcheances = role === 'admin' && etape === null;
+  const isEcheances = etape === 'echeances';
   const title = isEcheances ? 'Échéances' : pageTitleFor(etape, role);
   const items = useMemo(() => {
-    if (isEcheances) return snap.cases.filter((c) => !!c.echeance).sort((a, b) => new Date(a.echeance || 0).getTime() - new Date(b.echeance || 0).getTime());
+    if (isEcheances) {
+      return snap.cases
+        .filter((c) => !!c.echeance && c.etape !== 'cloture')
+        .sort((a, b) => new Date(a.echeance || 0).getTime() - new Date(b.echeance || 0).getTime());
+    }
     if (!etape) return snap.cases.filter((c) => c.etape !== 'cloture');
     const group = etapePageGroup(etape);
     return snap.cases.filter((c) => (group.length ? group : [etape]).includes(c.etape));
@@ -469,9 +481,14 @@ function DossierList({ role, base, etape }: { role: 'admin' | 'juriste'; base: s
   return (
     <div className="jx-dos">
       <style>{CSS}</style>
-      <div className="kicker">Xceed · Juridique</div>
+      <div className="kicker"><i /> Xceed · Juridique</div>
       <h1>{title}</h1>
       <p className="sub">{items.length} dossier{items.length > 1 ? 's' : ''}. Un clic ouvre la décision de cette étape. Un retard ne change pas l’étape.</p>
+      <div className="modes" style={{ marginTop: 14 }}>
+        <Link className={!etape ? 'mode on' : 'mode'} href={`${base}/dossiers`}>Tous</Link>
+        <Link className={etape === 'echeances' ? 'mode on' : 'mode'} href={`${base}/dossiers?etape=echeances`}>Échéances</Link>
+        <Link className={etape === 'cloture' ? 'mode on' : 'mode'} href={`${base}/dossiers?etape=cloture`}>Clos</Link>
+      </div>
       <section className="card">
         {items.length === 0 ? <p className="note">Aucun dossier dans cette vue.</p> : (
           <table>
@@ -485,7 +502,7 @@ function DossierList({ role, base, etape }: { role: 'admin' | 'juriste'; base: s
                   <tr key={c.id} className="pick" onClick={() => { setOpenRef(c.reference); setNote(''); }}>
                     <td className="ref">{c.reference}</td>
                     <td>{c.affectationFixe.lob || '—'}</td>
-                    <td>{c.agentId || '—'}</td>
+                    <td>{agentLabel(c.agentId || '')}</td>
                     <td>{ETAPE_LABELS[c.etape] || c.etape}</td>
                     <td>{c.echeance ? new Date(c.echeance).toLocaleDateString('fr-FR') : '—'}</td>
                     <td><span className={`pill ${cls}`}>{label}</span></td>
@@ -502,7 +519,7 @@ function DossierList({ role, base, etape }: { role: 'admin' | 'juriste'; base: s
             <div className="sheet-h">
               <div>
                 <h2>{opened.reference}</h2>
-                <p className="note">{ETAPE_LABELS[opened.etape] || opened.etape} · {opened.affectationFixe.lob || '—'} · {opened.agentId || '—'}</p>
+                <p className="note">{ETAPE_LABELS[opened.etape] || opened.etape} · {opened.affectationFixe.lob || '—'} · {agentLabel(opened.agentId || '')}</p>
               </div>
               <button className="x" type="button" onClick={() => setOpenRef(null)}>×</button>
             </div>
@@ -521,48 +538,145 @@ function DossierList({ role, base, etape }: { role: 'admin' | 'juriste'; base: s
 }
 
 const CSS = `
-.jx-dos { color: #18213b; font-family: Inter, ui-sans-serif, system-ui, "Segoe UI", sans-serif; }
-.jx-dos * { box-sizing: border-box; }
-.jx-dos button, .jx-dos input, .jx-dos select, .jx-dos textarea { font: inherit; }
-.jx-dos button { cursor: pointer; }
-.jx-dos h1 { margin: 4px 0 0; font-size: 28px; letter-spacing: -.03em; color: #0b1330; }
-.jx-dos h2 { margin: 0 0 6px; font-size: 16px; color: #0b1330; }
-.jx-dos .kicker { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #0aa8bd; font-weight: 800; }
-.jx-dos .sub, .jx-dos .hint, .jx-dos .note { color: #62708a; font-size: 13px; line-height: 1.45; }
-.jx-dos .card { background: #fff; border: 1px solid #e4e8f1; border-radius: 18px; padding: 14px; margin-top: 12px; }
-.jx-dos .modes, .jx-dos .acts { display: flex; flex-wrap: wrap; gap: 8px; }
-.jx-dos .mode, .jx-dos .ghost, .jx-dos .act { border-radius: 999px; padding: 8px 12px; font-weight: 800; }
-.jx-dos .mode, .jx-dos .ghost { border: 1px solid #e4e8f1; background: #fff; color: #0b1330; text-decoration: none; display: inline-flex; align-items: center; }
-.jx-dos .mode.on, .jx-dos .act { border: 0; background: #0b1330; color: #fff; }
-.jx-dos .act:disabled { opacity: .45; cursor: not-allowed; }
-.jx-dos .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
-.jx-dos label { display: grid; gap: 4px; font-size: 12px; font-weight: 800; color: #62708a; }
-.jx-dos label.full { grid-column: 1 / -1; }
-.jx-dos input, .jx-dos select, .jx-dos textarea { width: 100%; border: 1px solid #e4e8f1; border-radius: 10px; padding: 8px 10px; color: #18213b; background: #fff; }
-.jx-dos textarea { min-height: 74px; }
-.jx-dos .ro { background: #f7f8fb; }
-.jx-dos table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
-.jx-dos th { text-align: left; color: #62708a; font-size: 11px; padding: 0 6px 6px; }
-.jx-dos td { padding: 7px 6px; border-top: 1px solid #e4e8f1; vertical-align: top; }
-.jx-dos tr.pick { cursor: pointer; }
-.jx-dos tr.pick:hover td { background: #f8fafc; }
-.jx-dos .ref { font-weight: 800; color: #0b1330; }
-.jx-dos .pill { display: inline-block; border-radius: 99px; padding: 2px 7px; font-size: 11px; font-weight: 800; }
-.jx-dos .ok { background: #e8f6ee; color: #1f8a56; }
-.jx-dos .bad { background: #fdeceb; color: #b42318; }
-.jx-dos .pill.wait { background: #fff6e0; color: #9a6700; }
-.jx-dos .mute { background: #f3f6fb; color: #62708a; }
-.jx-dos article.wait { margin-top: 8px; padding: 10px; border: 1px solid #e4e8f1; border-radius: 12px; }
-.jx-dos .model { white-space: pre-wrap; background: #f7f8fb; border-radius: 12px; padding: 10px; font-size: 12px; }
-.jx-dos .okmsg, .jx-dos .badmsg { margin-top: 8px; padding: 8px 10px; border-radius: 10px; font-size: 12.5px; font-weight: 700; }
-.jx-dos .okmsg { background: #e8f6ee; color: #1f8a56; }
-.jx-dos .badmsg { background: #fdeceb; color: #b42318; }
-.jx-dos .overlay { position: fixed; inset: 0; z-index: 80; background: rgba(11,19,48,.46); display: flex; align-items: center; justify-content: center; padding: 18px; }
-.jx-dos .sheet { width: min(640px, 100%); max-height: 90vh; overflow: auto; background: #fff; border-radius: 18px; }
-.jx-dos .sheet-h, .jx-dos .sheet-b { padding: 14px 16px; }
-.jx-dos .sheet-h { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid #e4e8f1; }
-.jx-dos .x { width: 34px; height: 34px; border-radius: 99px; border: 1px solid #e4e8f1; background: #fff; }
-.jx-dos .faits { margin-top: 6px; padding: 8px 10px; border-radius: 10px; background: #f7f8fb; font-size: 13px; }
-.jx-dos .sheet-b .act { margin: 8px 8px 0 0; }
-@media (max-width: 800px) { .jx-dos .fields { grid-template-columns: 1fr; } }
+body.g-body.g-body .jx-dos {
+  color:var(--g-text);font-family:Inter,ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+  display:flex;flex-direction:column;gap:2px;padding-bottom:8px;
+}
+body.g-body.g-body .jx-dos *{box-sizing:border-box}
+body.g-body.g-body .jx-dos button, body.g-body.g-body .jx-dos input, body.g-body.g-body .jx-dos select, body.g-body.g-body .jx-dos textarea{font:inherit}
+body.g-body.g-body .jx-dos button{cursor:pointer}
+
+/* en-tête de page */
+body.g-body.g-body .jx-dos .kicker {
+  display:inline-flex;align-items:center;gap:7px;align-self:flex-start;
+  font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;
+  color:#0e7490;
+}
+body.g-body.g-body .jx-dos .kicker i{width:6px;height:6px;border-radius:50%;background:var(--g-cyan);box-shadow:0 0 0 3px rgba(8,145,178,.16)}
+body.g-body.g-body .jx-dos h1{margin:6px 0 0;font-size:26px;letter-spacing:-.035em;font-weight:760;color:var(--g-text)}
+body.g-body.g-body .jx-dos h2{margin:0 0 6px;font-size:16px;letter-spacing:-.02em;color:var(--g-text)}
+body.g-body.g-body .jx-dos .sub, body.g-body.g-body .jx-dos .hint, body.g-body.g-body .jx-dos .note{color:var(--g-muted);font-size:13px;line-height:1.5}
+body.g-body.g-body .jx-dos .sub{margin:4px 0 0;max-width:860px}
+body.g-body.g-body .jx-dos .note{margin:4px 0}
+
+/* cartes en verre */
+body.g-body.g-body .jx-dos .card {
+  margin-top:16px;padding:18px;border-radius:22px;
+  border:1px solid var(--g-stroke);
+  background:var(--g-glass);
+  box-shadow:var(--g-shadow),inset 0 1px 0 rgba(255,255,255,.72);
+  backdrop-filter:blur(var(--g-blur)) saturate(160%);
+  -webkit-backdrop-filter:blur(var(--g-blur)) saturate(160%);
+}
+
+/* onglets pilule */
+body.g-body.g-body .jx-dos .modes, body.g-body.g-body .jx-dos .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+body.g-body.g-body .jx-dos .mode, body.g-body.g-body .jx-dos .ghost, body.g-body.g-body .jx-dos .act {
+  display:inline-flex;align-items:center;gap:7px;
+  border-radius:999px;padding:0 14px;height:36px;
+  font-size:12.5px;font-weight:750;letter-spacing:-.005em;text-decoration:none;
+  transition:transform .18s,box-shadow .18s,background .18s,color .18s,border-color .18s;
+}
+body.g-body.g-body .jx-dos .mode, body.g-body.g-body .jx-dos .ghost {
+  border:1px solid var(--g-stroke);background:rgba(255,255,255,.6);color:var(--g-text);
+}
+body.g-body.g-body .jx-dos .mode:hover, body.g-body.g-body .jx-dos .ghost:hover {
+  transform:translateY(-1px);border-color:rgba(124,58,237,.4);
+  box-shadow:0 10px 22px -16px rgba(76,29,149,.5);color:#6d28d9;
+}
+body.g-body.g-body .jx-dos .mode.on {
+  border-color:transparent;color:#fff;
+  background:linear-gradient(120deg,#2563eb,#0891b2);
+  box-shadow:0 12px 22px -14px rgba(37,99,235,.8);
+}
+body.g-body.g-body .jx-dos .act {
+  border:0;color:#fff;
+  background:linear-gradient(120deg,#2563eb,#0891b2);
+  box-shadow:0 12px 22px -14px rgba(37,99,235,.8);
+}
+body.g-body.g-body .jx-dos .act:hover{transform:translateY(-1px)}
+body.g-body.g-body .jx-dos .act:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+body.g-body.g-body .jx-dos .acts{margin-top:14px}
+body.g-body.g-body .jx-dos .card .modes + .acts{margin-top:10px}
+
+/* champs */
+body.g-body.g-body .jx-dos .fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+body.g-body.g-body .jx-dos label{display:grid;gap:5px;font-size:11px;font-weight:800;color:var(--g-muted);letter-spacing:.01em}
+body.g-body.g-body .jx-dos label.full{grid-column:1/-1}
+body.g-body.g-body .jx-dos input, body.g-body.g-body .jx-dos select, body.g-body.g-body .jx-dos textarea {
+  width:100%;border:1px solid var(--g-stroke);border-radius:12px;
+  padding:0 11px;height:38px;color:var(--g-text);background:rgba(255,255,255,.92);
+  font-size:12.5px;font-weight:600;outline:none;transition:.2s;
+}
+body.g-body.g-body .jx-dos textarea{min-height:76px;padding:10px 11px;height:auto;line-height:1.45;font-weight:500}
+body.g-body.g-body .jx-dos input:focus, body.g-body.g-body .jx-dos select:focus, body.g-body.g-body .jx-dos textarea:focus {
+  border-color:rgba(37,99,235,.6);box-shadow:0 0 0 3px rgba(37,99,235,.16);
+}
+body.g-body.g-body .jx-dos .ro{background:rgba(238,242,248,.85);color:var(--g-muted);font-weight:650}
+
+/* tables */
+body.g-body.g-body .jx-dos table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+body.g-body.g-body .jx-dos th {
+  text-align:left;padding:0 10px 9px;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--g-muted);font-weight:800;
+  border-bottom:1px solid var(--g-line);
+}
+body.g-body.g-body .jx-dos td{padding:11px 10px;border-bottom:1px solid var(--g-line);vertical-align:middle;color:var(--g-text)}
+body.g-body.g-body .jx-dos tbody tr:last-child td{border-bottom:0}
+body.g-body.g-body .jx-dos tr.pick{cursor:pointer;transition:background .16s}
+body.g-body.g-body .jx-dos tr.pick:hover td{background:rgba(255,255,255,.62)}
+body.g-body.g-body .jx-dos .ref{font-weight:800;letter-spacing:-.01em;color:var(--g-text);white-space:nowrap}
+
+/* badges */
+body.g-body.g-body .jx-dos .pill {
+  display:inline-flex;align-items:center;gap:5px;border-radius:999px;
+  padding:3px 9px;font-size:10.5px;font-weight:800;white-space:nowrap;
+}
+body.g-body.g-body .jx-dos .pill.ok{background:rgba(16,185,129,.12);color:#047857}
+body.g-body.g-body .jx-dos .pill.bad{background:rgba(225,29,72,.1);color:#be123c}
+body.g-body.g-body .jx-dos .pill.wait{background:rgba(217,119,6,.12);color:#b45309}
+body.g-body.g-body .jx-dos .pill.mute{background:rgba(100,116,139,.12);color:#475569}
+
+/* file d'attente des mails */
+body.g-body.g-body .jx-dos article.wait {
+  margin-top:10px;padding:13px 14px;border:1px solid var(--g-stroke);border-radius:16px;
+  background:rgba(255,255,255,.55);
+}
+body.g-body.g-body .jx-dos .model {
+  white-space:pre-wrap;background:rgba(241,245,249,.75);border:1px solid var(--g-line);
+  border-radius:14px;padding:12px;font-size:11.5px;line-height:1.6;color:#334155;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto;
+}
+body.g-body.g-body .jx-dos .okmsg, body.g-body.g-body .jx-dos .badmsg {
+  margin-top:12px;padding:9px 12px;border-radius:12px;font-size:12.5px;font-weight:700;
+}
+body.g-body.g-body .jx-dos .okmsg{background:rgba(16,185,129,.12);color:#047857}
+body.g-body.g-body .jx-dos .badmsg{background:rgba(225,29,72,.1);color:#be123c}
+
+/* feuille modale */
+body.g-body.g-body .jx-dos .overlay {
+  position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;
+  padding:18px;background:rgba(11,19,48,.46);backdrop-filter:blur(4px);
+}
+body.g-body.g-body .jx-dos .sheet {
+  width:min(640px,100%);max-height:90vh;overflow:auto;border-radius:22px;
+  background:rgba(255,255,255,.94);border:1px solid var(--g-stroke);
+  box-shadow:0 40px 90px -40px rgba(15,23,42,.55);
+}
+body.g-body.g-body .jx-dos .sheet-h, body.g-body.g-body .jx-dos .sheet-b{padding:16px 18px}
+body.g-body.g-body .jx-dos .sheet-h{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--g-line)}
+body.g-body.g-body .jx-dos .sheet-b{padding-top:14px}
+body.g-body.g-body .jx-dos .x {
+  width:34px;height:34px;border-radius:50%;border:1px solid var(--g-stroke);
+  background:#fff;font-size:18px;line-height:1;color:var(--g-muted);
+}
+body.g-body.g-body .jx-dos .x:hover{border-color:rgba(225,29,72,.45);color:#be123c}
+body.g-body.g-body .jx-dos .faits {
+  margin:6px 0 2px;padding:10px 12px;border-radius:12px;
+  background:rgba(241,245,249,.8);font-size:13px;line-height:1.5;color:#334155;
+}
+@media (max-width:800px){
+  body.g-body.g-body .jx-dos .fields{grid-template-columns:1fr}
+  body.g-body.g-body .jx-dos .card{padding:14px;border-radius:18px}
+}
 `;

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { ReactNode, Suspense } from 'react';
 import type { Role } from '@/lib/const';
@@ -15,13 +15,17 @@ interface RoleLayoutProps {
   children: ReactNode;
 }
 
+/**
+ * Coquille commune aux trois espaces.
+ * Le fond animé est déjà rendu par src/app/layout.tsx : ne pas en ajouter un second ici.
+ */
 export default function RoleLayout({ role, children }: RoleLayoutProps) {
   return (
-    <div className="flex min-h-screen bg-[#f6f7fb] text-[#18213b]">
-<Suspense fallback={<div className="w-64 shrink-0 bg-[#0b1330]" />}>
-      <Sidebar role={role} userName={DEMO_USER_NAMES[role]} />
-    </Suspense>
-      <main className="flex-1 min-w-0 p-6 lg:p-8 overflow-auto g-main">{children}</main>
+    <div className="g-app">
+      <Suspense fallback={<div className="g-side g-glass" />}>
+        <Sidebar role={role} userName={DEMO_USER_NAMES[role]} />
+      </Suspense>
+      <main className="g-main">{children}</main>
     </div>
   );
 }

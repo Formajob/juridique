@@ -19,10 +19,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body className="bg-background text-foreground antialiased g-body">
+      <body className="g-body">
+        {/* Fond décoratif commun à toutes les pages (habillage Glassy V22). */}
+        <div className="g-aurora" aria-hidden="true">
+          <span className="g-orb g-orb--1" />
+          <span className="g-orb g-orb--2" />
+          <div className="g-grid" />
+        </div>
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
   );
 }
-
