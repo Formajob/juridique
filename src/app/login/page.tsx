@@ -1,4 +1,5 @@
 'use client'
+// SIGNATURE-LOGIN: lg-autonome-v6
 
 /**
  * Page de connexion — autonome.
@@ -16,9 +17,32 @@ import Link from 'next/link'
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={null}>
-      <LoginForm />
-    </Suspense>
+    <>
+      {/* Marqueur lisible par un simple curl : present des le HTML serveur,
+          meme quand le formulaire est en attente d'hydratation. */}
+      <meta name="acx-login" content="lg-autonome-v6" />
+      <Suspense
+        fallback={
+          <div
+            style={{
+              minHeight: '100vh',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#eef2fb',
+              fontFamily: 'Inter,system-ui,sans-serif',
+              color: '#54658a',
+              fontSize: 13,
+              letterSpacing: '.04em',
+            }}
+          >
+            Chargement…
+          </div>
+        }
+      >
+        <LoginForm />
+      </Suspense>
+    </>
   )
 }
 
@@ -161,6 +185,8 @@ function LoginForm() {
                   <Link href="/assistant">Assistant</Link>
                 </div>
               </div>
+
+              <p className="lg-ver">Login autonome · v6</p>
             </form>
           </div>
         </div>
@@ -170,10 +196,14 @@ function LoginForm() {
 }
 
 const LG_CSS = `
+/* Filet de sécurité : si le projet laisse un fond décoratif fixe (.g-aurora),
+   il peut repeindre par-dessus le formulaire. On l'éteint sur cette page. */
+body:has(.lg) > .g-aurora,
+body:has(.lg) .g-aurora{display:none!important}
 .lg{
   /* le fond global .g-aurora (fixed, z-index 0) est un frère rendu après cette page :
      sans contexte d'empilement, il repeint PAR-DESSUS la carte du formulaire. */
-  position:relative;z-index:1;isolation:isolate;
+  position:relative;z-index:50;isolation:isolate;
   display:grid;grid-template-columns:1.05fr 1fr;min-height:100vh;
   background:
     radial-gradient(circle at 78% 12%,rgba(124,58,237,.10),transparent 46%),
@@ -266,6 +296,7 @@ const LG_CSS = `
 .lg .lg-demo a{display:flex;align-items:center;justify-content:center;height:38px;border-radius:11px;
   border:1px solid rgba(15,35,80,.16);background:#fff;color:#0b1730;font-size:12px;font-weight:700;transition:.2s}
 .lg .lg-demo a:hover{border-color:#2563eb;color:#1d4ed8}
+.lg-ver{margin-top:14px;text-align:center;font-size:10px;letter-spacing:.06em;color:#a4b0c6}
 
 @media (max-width:980px){
   .lg{grid-template-columns:1fr}
